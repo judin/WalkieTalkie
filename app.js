@@ -1364,7 +1364,7 @@ function renderHistory() {
         `;
     }).join('');
 
-    // Add click handlers for history cards
+    // Add click handlers and check for overflow on card locations
     elements.historyList.querySelectorAll('.history-card').forEach(card => {
         card.addEventListener('click', () => {
             const id = parseInt(card.dataset.id);
@@ -1373,6 +1373,12 @@ function renderHistory() {
                 displayResponse(entry.content);
             }
         });
+
+        // Check if location text overflows and add marquee
+        const locationEl = card.querySelector('.history-card-location');
+        if (locationEl && locationEl.scrollWidth > locationEl.parentElement.offsetWidth) {
+            locationEl.classList.add('overflow');
+        }
     });
 }
 

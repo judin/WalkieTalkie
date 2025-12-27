@@ -580,8 +580,14 @@ body {
     color: var(--text);
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     line-height: 1.2;
+}
+
+.history-card-location.overflow {
+    display: inline-block;
+    padding-right: 30px;
+    animation: marquee 8s linear infinite;
+    animation-delay: 1s;
 }
 
 .history-card-time {
