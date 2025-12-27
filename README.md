@@ -22,6 +22,13 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.4.2
+- Map and location card now both hidden on initial load
+- Both animate in smoothly when location is first obtained
+
+### v1.4.1
+- Added README with changelog
+
 ### v1.4.0
 - Discover button now visible immediately on app load
 - Location card hidden until first discovery, then animates in smoothly

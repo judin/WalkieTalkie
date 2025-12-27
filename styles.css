@@ -312,6 +312,14 @@ body {
     margin: 0 calc(-50vw + 50%);
     width: 100vw;
     border-radius: 0;
+    opacity: 0;
+    max-height: 0;
+    transition: opacity 0.4s ease, max-height 0.4s ease;
+}
+
+.map-container.visible {
+    opacity: 1;
+    max-height: 200px;
 }
 
 #map {

@@ -65,7 +65,9 @@ const elements = {
     // Extra content
     extraContentSection: document.getElementById('extraContentSection'),
     // Location icon (for refresh)
-    locationIcon: document.getElementById('locationIcon')
+    locationIcon: document.getElementById('locationIcon'),
+    // Map container
+    mapContainer: document.getElementById('mapContainer')
 };
 
 // Initialize the application
@@ -733,7 +735,8 @@ function getLocation(showFeedback = true) {
             // Update geocoding
             state.currentLocationName = null;
             reverseGeocode(position.coords.latitude, position.coords.longitude);
-            // Show location card if not already visible
+            // Show map and location card if not already visible
+            elements.mapContainer.classList.add('visible');
             elements.locationCard.classList.add('visible');
             if (showFeedback) showToast('Location updated', 'success');
             stopAnimation();
@@ -1004,7 +1007,8 @@ function getLocationAsync() {
                 // Start geocoding in background
                 reverseGeocode(position.coords.latitude, position.coords.longitude);
 
-                // Show location card with animation
+                // Show map and location card with animation
+                elements.mapContainer.classList.add('visible');
                 elements.locationCard.classList.add('visible');
 
                 // Stop rainbow animation
