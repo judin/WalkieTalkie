@@ -17,6 +17,7 @@ const state = {
     settings: {
         apiKey: '',
         detailLevel: 'moderate',
+        language: 'en-GB',
         interests: ''
     },
     // Compass state
@@ -44,6 +45,7 @@ const elements = {
     apiKeyInput: document.getElementById('apiKey'),
     toggleApiKey: document.getElementById('toggleApiKey'),
     detailLevel: document.getElementById('detailLevel'),
+    language: document.getElementById('language'),
     interests: document.getElementById('interests'),
     saveSettings: document.getElementById('saveSettings'),
     clearHistory: document.getElementById('clearHistory'),
@@ -554,6 +556,7 @@ function loadSettings() {
             state.settings = { ...state.settings, ...parsed };
             elements.apiKeyInput.value = state.settings.apiKey;
             elements.detailLevel.value = state.settings.detailLevel;
+            elements.language.value = state.settings.language || 'en-GB';
             elements.interests.value = state.settings.interests;
         } catch (e) {
             console.error('Failed to load settings:', e);
@@ -565,6 +568,7 @@ function loadSettings() {
 function saveSettings() {
     state.settings.apiKey = elements.apiKeyInput.value.trim();
     state.settings.detailLevel = elements.detailLevel.value;
+    state.settings.language = elements.language.value;
     state.settings.interests = elements.interests.value.trim();
 
     localStorage.setItem('walkietalkie_settings', JSON.stringify(state.settings));
@@ -954,11 +958,16 @@ function setLoading(loading) {
 // Get AI response from OpenAI
 async function getAIResponse() {
     const { latitude, longitude } = state.currentPosition;
-    const { detailLevel, interests } = state.settings;
+    const { detailLevel, interests, language } = state.settings;
     const locationName = state.currentLocationName;
 
     // Build the prompt based on settings
     let prompt = buildPrompt(latitude, longitude, detailLevel, interests, locationName);
+
+    // Language instruction
+    const languageInstruction = language === 'en-US'
+        ? 'Write in American English (use American spelling and expressions).'
+        : 'Write in British English (use British spelling and expressions).';
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -971,7 +980,7 @@ async function getAIResponse() {
             messages: [
                 {
                     role: 'system',
-                    content: `You're a friendly local who knows this area well. Share interesting facts and useful info in a natural, conversational way - like chatting with a friend. Keep it real: stick to facts, skip the fluff, and don't make things up. If you're not sure about something specific to this exact spot, focus on what you know about the general area. Write in short, punchy paragraphs. No corporate speak or AI-sounding phrases.`
+                    content: `You're a friendly local who knows this area well. Share interesting facts and useful info in a natural, conversational way - like chatting with a friend. Keep it real: stick to facts, skip the fluff, and don't make things up. If you're not sure about something specific to this exact spot, focus on what you know about the general area. Write in short, punchy paragraphs. No corporate speak or AI-sounding phrases. ${languageInstruction}`
                 },
                 {
                     role: 'user',
