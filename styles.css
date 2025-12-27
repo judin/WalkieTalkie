@@ -996,6 +996,12 @@ body {
     text-overflow: ellipsis;
 }
 
+.landmark-type {
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 500;
+}
+
 .landmark-bearing {
     font-size: 0.75rem;
     color: var(--text-muted);

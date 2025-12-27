@@ -350,21 +350,30 @@ async function parseLandmarksFromResponse(content) {
 
     const landmarksText = landmarksMatch[1];
 
-    // Parse individual landmarks (look for bold text or list items)
-    const landmarkPattern = /\*\*([^*]+)\*\*[^(]*\(([^)]*(?:km|m|mile|minutes?)[^)]*)\)/gi;
-    const matches = [...landmarksText.matchAll(landmarkPattern)];
+    // Parse landmarks with type: **Name** - *Type* (about X metres)
+    const landmarkWithTypePattern = /\*\*([^*]+)\*\*\s*[-–]\s*\*([^*]+)\*[^(]*\(([^)]*(?:km|m|metre|meter|mile|minutes?)[^)]*)\)/gi;
+    let matches = [...landmarksText.matchAll(landmarkWithTypePattern)];
+
+    // Fallback: try without type - **Name** (about X metres)
+    if (matches.length === 0) {
+        const landmarkPattern = /\*\*([^*]+)\*\*[^(]*\(([^)]*(?:km|m|metre|meter|mile|minutes?)[^)]*)\)/gi;
+        const fallbackMatches = [...landmarksText.matchAll(landmarkPattern)];
+        // Convert to same format (name, type=null, distance)
+        matches = fallbackMatches.map(m => [m[0], m[1], null, m[2]]);
+    }
 
     if (matches.length === 0) {
-        // Try simpler pattern - look for list items
-        const listPattern = /[-•]\s*\*\*([^*]+)\*\*/gi;
+        // Try simpler pattern - look for list items with type
+        const listPattern = /[-•]\s*\*\*([^*]+)\*\*\s*[-–]\s*\*([^*]+)\*/gi;
         const listMatches = [...landmarksText.matchAll(listPattern)];
-        matches.push(...listMatches);
+        matches.push(...listMatches.map(m => [m[0], m[1], m[2], '']));
     }
 
     // Geocode each landmark and calculate bearing
     for (const match of matches.slice(0, 5)) { // Limit to 5 landmarks
         const landmarkName = match[1].trim();
-        const distanceInfo = match[2] || '';
+        const landmarkType = match[2] ? match[2].trim() : null;
+        const distanceInfo = match[3] || '';
 
         try {
             const coords = await geocodeLandmark(landmarkName);
@@ -378,6 +387,7 @@ async function parseLandmarksFromResponse(content) {
 
                 state.compass.landmarks.push({
                     name: landmarkName,
+                    type: landmarkType,
                     bearing: Math.round(bearing),
                     distance: distanceInfo,
                     lat: coords.lat,
@@ -446,6 +456,7 @@ function renderLandmarksList() {
             </div>
             <div class="landmark-info">
                 <span class="landmark-name">${escapeHtml(landmark.name)}</span>
+                ${landmark.type ? `<span class="landmark-type">${escapeHtml(landmark.type)}</span>` : ''}
                 <span class="landmark-bearing">${landmark.bearing}° ${getCardinalDirection(landmark.bearing)}${landmark.distance ? ' • ' + landmark.distance : ''}${walkingTime ? ' • ' + walkingTime + ' min walk' : ''}</span>
             </div>
             <div class="landmark-nav-icon">
@@ -1075,7 +1086,8 @@ function buildPrompt(latitude, longitude, detailLevel, interests, locationName) 
 One short paragraph on where I am.
 
 ## Nearby
-2-3 places or landmarks worth knowing about (with rough distances if possible).
+2-3 places or landmarks. Format each as: **Name** - *Type* (about X metres)
+Example: **Liberty London** - *Department Store* (about 400 metres)
 
 ## Quick Fact
 One interesting thing about this area.`;
@@ -1087,7 +1099,8 @@ One interesting thing about this area.`;
 What kind of place is this? What's its character?
 
 ## Landmarks & Attractions
-Notable places nearby I could visit or see. Include approximate distances.
+Notable places nearby. Format each as: **Name** - *Type* (about X metres)
+Example: **Liberty London** - *Department Store* (about 400 metres)
 
 ## History
 Key historical background of this area.
@@ -1108,7 +1121,8 @@ Suggestions for exploring while I'm here.`;
 Brief description of where I am and what it's like.
 
 ## Landmarks & Attractions
-3-4 notable places nearby worth knowing about. Include approximate distances where possible.
+3-4 notable places nearby. Format each as: **Name** - *Type* (about X metres)
+Example: **Liberty London** - *Department Store* (about 400 metres)
 
 ## Interesting Facts
 2-3 things that make this area unique or surprising.
