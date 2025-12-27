@@ -753,9 +753,9 @@ function getLocation(showFeedback = true) {
     );
 }
 
-// Refresh location button handler
+// Location icon tap handler - triggers new discovery with fresh location
 function refreshLocation() {
-    getLocation(true);
+    handleDiscover(true);
 }
 
 // Handle successful position update
@@ -957,7 +957,7 @@ function updateDiscoverButton() {
 }
 
 // Handle discover button click
-async function handleDiscover() {
+async function handleDiscover(forceLocationRefresh = false) {
     if (!state.settings.apiKey) {
         openModal();
         showToast('Please enter your OpenAI API key', 'error');
@@ -967,8 +967,8 @@ async function handleDiscover() {
     setLoading(true);
 
     try {
-        // Get location first if not available
-        if (!state.currentPosition) {
+        // Get location (always refresh if forced, or if no current position)
+        if (forceLocationRefresh || !state.currentPosition) {
             await getLocationAsync();
         }
 
@@ -980,6 +980,11 @@ async function handleDiscover() {
         const response = await getAIResponse();
         displayResponse(response);
         addToHistory(response);
+
+        // Hide discover button after first successful discovery
+        if (elements.discoverBtn) {
+            elements.discoverBtn.classList.add('hidden');
+        }
     } catch (error) {
         console.error('Error getting AI response:', error);
         showToast(error.message || 'Failed to get information about this area', 'error');
@@ -1208,8 +1213,10 @@ function getMaxTokens(detailLevel) {
 
 // Display the AI response
 function displayResponse(content) {
-    const placeholder = elements.responseArea.querySelector('.response-placeholder');
-    placeholder.style.display = 'none';
+    const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
+    if (welcomePanel) {
+        welcomePanel.classList.add('hidden');
+    }
 
     // Convert markdown-like formatting to HTML
     const formattedContent = formatResponse(content);
