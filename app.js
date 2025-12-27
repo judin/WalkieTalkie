@@ -1231,7 +1231,7 @@ async function getExtraContent(topic) {
             messages: [
                 {
                     role: 'system',
-                    content: 'You\'re a helpful local guide. Give practical, honest recommendations. Keep responses concise - around 150-200 words. Use a conversational tone.'
+                    content: 'You\'re a helpful local guide. Give practical, honest recommendations. Keep responses concise - around 150-200 words. Use a conversational tone. Never start with filler words like "Absolutely", "Certainly", "Of course" - just get straight to the information.'
                 },
                 {
                     role: 'user',
