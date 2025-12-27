@@ -431,8 +431,10 @@ function renderLandmarksList() {
         return;
     }
 
-    elements.landmarksList.innerHTML = state.compass.landmarks.map((landmark, index) => `
-        <div class="landmark-item" data-index="${index}">
+    elements.landmarksList.innerHTML = state.compass.landmarks.map((landmark, index) => {
+        const walkingTime = calculateWalkingTime(landmark.distance);
+        return `
+        <div class="landmark-item" data-index="${index}" data-lat="${landmark.lat}" data-lon="${landmark.lon}" data-name="${escapeHtml(landmark.name)}">
             <div class="landmark-direction">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L4 20h16L12 2z"/>
@@ -440,15 +442,107 @@ function renderLandmarksList() {
             </div>
             <div class="landmark-info">
                 <span class="landmark-name">${escapeHtml(landmark.name)}</span>
-                <span class="landmark-bearing">${landmark.bearing}° ${getCardinalDirection(landmark.bearing)}${landmark.distance ? ' • ' + landmark.distance : ''}</span>
+                <span class="landmark-bearing">${landmark.bearing}° ${getCardinalDirection(landmark.bearing)}${landmark.distance ? ' • ' + landmark.distance : ''}${walkingTime ? ' • ' + walkingTime + ' min walk' : ''}</span>
+            </div>
+            <div class="landmark-nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
             </div>
         </div>
-    `).join('');
+    `}).join('');
+
+    // Add click handlers for navigation
+    elements.landmarksList.querySelectorAll('.landmark-item').forEach(item => {
+        item.addEventListener('click', () => openNavigationChooser(item));
+    });
 
     // Show compass section if hidden
     if (elements.compassSection) {
         elements.compassSection.classList.add('has-landmarks');
     }
+}
+
+// Calculate walking time in minutes from distance string
+function calculateWalkingTime(distanceStr) {
+    if (!distanceStr) return null;
+
+    // Average walking speed: ~3 mph or ~5 km/h or ~80m per minute
+    let meters = 0;
+
+    // Parse various distance formats
+    const kmMatch = distanceStr.match(/([\d.]+)\s*km/i);
+    const mMatch = distanceStr.match(/([\d.]+)\s*m(?:eter|etre)?s?\b/i);
+    const mileMatch = distanceStr.match(/([\d.]+)\s*mile/i);
+
+    if (kmMatch) {
+        meters = parseFloat(kmMatch[1]) * 1000;
+    } else if (mileMatch) {
+        meters = parseFloat(mileMatch[1]) * 1609.34;
+    } else if (mMatch) {
+        meters = parseFloat(mMatch[1]);
+    }
+
+    if (meters === 0) return null;
+
+    // Walking speed ~80m per minute
+    const minutes = Math.round(meters / 80);
+    return minutes > 0 ? minutes : 1;
+}
+
+// Open navigation chooser
+function openNavigationChooser(item) {
+    const lat = item.dataset.lat;
+    const lon = item.dataset.lon;
+    const name = item.dataset.name;
+
+    if (!lat || !lon) return;
+
+    // Create navigation options
+    const options = [
+        { name: 'Google Maps', url: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking` },
+        { name: 'Apple Maps', url: `http://maps.apple.com/?daddr=${lat},${lon}&dirflg=w` },
+        { name: 'Waze', url: `https://waze.com/ul?ll=${lat},${lon}&navigate=yes` }
+    ];
+
+    // Show a simple chooser dialog
+    showNavigationDialog(name, options);
+}
+
+// Show navigation app chooser dialog
+function showNavigationDialog(placeName, options) {
+    // Remove existing dialog if any
+    const existingDialog = document.querySelector('.nav-dialog-overlay');
+    if (existingDialog) existingDialog.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'nav-dialog-overlay';
+    overlay.innerHTML = `
+        <div class="nav-dialog">
+            <div class="nav-dialog-title">Navigate to ${escapeHtml(placeName)}</div>
+            <div class="nav-dialog-options">
+                ${options.map(opt => `
+                    <a href="${opt.url}" target="_blank" rel="noopener" class="nav-dialog-option">${opt.name}</a>
+                `).join('')}
+            </div>
+            <button class="nav-dialog-cancel">Cancel</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    overlay.querySelector('.nav-dialog-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+
+    // Close on option click (after short delay to allow navigation)
+    overlay.querySelectorAll('.nav-dialog-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            setTimeout(() => overlay.remove(), 100);
+        });
+    });
 }
 
 // Load settings from localStorage
