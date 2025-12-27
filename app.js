@@ -293,46 +293,68 @@ async function reverseGeocode(latitude, longitude) {
 
 // Format the location name from address components
 function formatLocationName(address, displayName) {
-    // Try to build a meaningful short name
     const parts = [];
 
-    // Primary location identifier
-    if (address.road || address.pedestrian || address.footway) {
-        parts.push(address.road || address.pedestrian || address.footway);
-    } else if (address.neighbourhood || address.suburb) {
-        parts.push(address.neighbourhood || address.suburb);
-    } else if (address.hamlet || address.village || address.town) {
-        parts.push(address.hamlet || address.village || address.town);
+    // Helper to check if a road name is too generic (motorways, A-roads, etc)
+    const isGenericRoad = (road) => {
+        if (!road) return true;
+        // Match patterns like M4, M25, A40, A404, B3400, etc.
+        return /^[MAB]\d+/.test(road);
+    };
+
+    // 1. Start with the most specific place name
+    const specificPlace = address.amenity || address.tourism || address.leisure ||
+        address.building || address.shop || address.office;
+    if (specificPlace) {
+        parts.push(specificPlace);
     }
 
-    // Add area context
+    // 2. Add local area - but skip generic roads
+    if (!isGenericRoad(address.road) && address.road) {
+        parts.push(address.road);
+    } else if (address.pedestrian) {
+        parts.push(address.pedestrian);
+    } else if (address.neighbourhood) {
+        parts.push(address.neighbourhood);
+    } else if (address.hamlet) {
+        parts.push(address.hamlet);
+    }
+
+    // 3. Add suburb/village/area context
     if (address.suburb && !parts.includes(address.suburb)) {
         parts.push(address.suburb);
+    } else if (address.village && !parts.includes(address.village)) {
+        parts.push(address.village);
     } else if (address.city_district && !parts.includes(address.city_district)) {
         parts.push(address.city_district);
     }
 
-    // Add city/town
-    if (address.city) {
-        parts.push(address.city);
-    } else if (address.town) {
-        parts.push(address.town);
-    } else if (address.municipality) {
-        parts.push(address.municipality);
+    // 4. Add town/city
+    const city = address.city || address.town || address.municipality;
+    if (city && !parts.includes(city)) {
+        parts.push(city);
     }
 
-    // Add country for context if we have room
-    if (parts.length < 3 && address.country) {
+    // 5. If still nothing useful, try county or state
+    if (parts.length === 0) {
+        if (address.county) parts.push(address.county);
+        if (address.state) parts.push(address.state);
+    }
+
+    // 6. Add country only if we have very little context
+    if (parts.length < 2 && address.country) {
         parts.push(address.country);
     }
 
-    // Return formatted name or fallback to display_name
+    // Return formatted name
     if (parts.length > 0) {
         return parts.slice(0, 3).join(', ');
     }
 
-    // Fallback: take first 3 parts of display_name
-    return displayName.split(',').slice(0, 3).join(',').trim();
+    // Fallback: use display_name but skip the road part if it's generic
+    const displayParts = displayName.split(',').map(p => p.trim());
+    const filtered = displayParts.filter(p => !isGenericRoad(p));
+    return filtered.slice(0, 3).join(', ');
 }
 
 // Handle position error
