@@ -18,6 +18,13 @@ const state = {
         apiKey: '',
         detailLevel: 'moderate',
         interests: ''
+    },
+    // Compass state
+    compass: {
+        heading: null,
+        supported: false,
+        permissionGranted: false,
+        landmarks: [] // Array of {name, bearing, distance}
     }
 };
 
@@ -42,7 +49,15 @@ const elements = {
     clearHistory: document.getElementById('clearHistory'),
     toastContainer: document.getElementById('toastContainer'),
     textSmaller: document.getElementById('textSmaller'),
-    textLarger: document.getElementById('textLarger')
+    textLarger: document.getElementById('textLarger'),
+    // Compass elements
+    compassSection: document.getElementById('compassSection'),
+    compassRose: document.getElementById('compassRose'),
+    compassHeading: document.getElementById('compassHeading'),
+    landmarksList: document.getElementById('landmarksList'),
+    enableCompass: document.getElementById('enableCompass'),
+    // Theme toggle
+    themeToggle: document.getElementById('themeToggle')
 };
 
 // Initialize the application
@@ -50,9 +65,11 @@ function init() {
     loadSettings();
     loadHistory();
     loadTextSize();
+    loadTheme();
     setupEventListeners();
     initMap();
     requestLocationPermission();
+    initCompass();
     registerServiceWorker();
 }
 
@@ -78,6 +95,48 @@ function adjustTextSize(delta) {
         applyTextSize();
         localStorage.setItem('walkietalkie_textsize', state.textSize);
     }
+}
+
+// Load theme from localStorage
+function loadTheme() {
+    const saved = localStorage.getItem('walkietalkie_theme');
+    if (saved) {
+        applyTheme(saved);
+    } else {
+        // Use system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(prefersDark ? 'dark' : 'light');
+    }
+}
+
+// Apply theme
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeToggleIcon(theme);
+}
+
+// Update theme toggle icon
+function updateThemeToggleIcon(theme) {
+    if (!elements.themeToggle) return;
+    const sunIcon = elements.themeToggle.querySelector('.sun-icon');
+    const moonIcon = elements.themeToggle.querySelector('.moon-icon');
+    if (sunIcon && moonIcon) {
+        if (theme === 'dark') {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        } else {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        }
+    }
+}
+
+// Toggle theme
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+    localStorage.setItem('walkietalkie_theme', newTheme);
 }
 
 // Initialize the Leaflet map
@@ -122,6 +181,272 @@ function updateMap() {
 
     // Center map on user location
     state.map.setView([latitude, longitude], 15);
+}
+
+// Initialize compass functionality
+function initCompass() {
+    // Check if Device Orientation API is supported
+    if ('DeviceOrientationEvent' in window) {
+        state.compass.supported = true;
+
+        // Check if we need to request permission (iOS 13+)
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS requires explicit permission request via user gesture
+            if (elements.enableCompass) {
+                elements.enableCompass.style.display = 'block';
+            }
+        } else {
+            // Non-iOS devices - start listening immediately
+            startCompassListening();
+        }
+    } else {
+        console.log('Device Orientation not supported');
+        if (elements.compassSection) {
+            elements.compassSection.classList.add('not-supported');
+        }
+    }
+}
+
+// Request compass permission (iOS)
+async function requestCompassPermission() {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission === 'granted') {
+                state.compass.permissionGranted = true;
+                startCompassListening();
+                if (elements.enableCompass) {
+                    elements.enableCompass.style.display = 'none';
+                }
+                showToast('Compass enabled!', 'success');
+            } else {
+                showToast('Compass permission denied', 'error');
+            }
+        } catch (error) {
+            console.error('Compass permission error:', error);
+            showToast('Could not enable compass', 'error');
+        }
+    }
+}
+
+// Start listening to compass events
+function startCompassListening() {
+    // Use deviceorientationabsolute if available (more accurate)
+    if ('ondeviceorientationabsolute' in window) {
+        window.addEventListener('deviceorientationabsolute', handleCompassReading, true);
+    } else {
+        window.addEventListener('deviceorientation', handleCompassReading, true);
+    }
+    state.compass.permissionGranted = true;
+}
+
+// Handle compass reading
+function handleCompassReading(event) {
+    let heading = null;
+
+    // Get the compass heading
+    if (event.webkitCompassHeading !== undefined) {
+        // iOS Safari
+        heading = event.webkitCompassHeading;
+    } else if (event.alpha !== null) {
+        // Android and others - alpha is rotation around z-axis
+        // Convert to compass heading (0 = North)
+        if (event.absolute) {
+            heading = (360 - event.alpha) % 360;
+        } else {
+            // Fallback for non-absolute readings
+            heading = (360 - event.alpha) % 360;
+        }
+    }
+
+    if (heading !== null) {
+        state.compass.heading = Math.round(heading);
+        updateCompassDisplay();
+    }
+}
+
+// Update compass display
+function updateCompassDisplay() {
+    if (!elements.compassRose || !elements.compassHeading) return;
+
+    const heading = state.compass.heading;
+    if (heading === null) return;
+
+    // Rotate the compass rose (inverted so north points up when phone points north)
+    elements.compassRose.style.transform = `rotate(${-heading}deg)`;
+
+    // Update heading text with cardinal direction
+    const cardinal = getCardinalDirection(heading);
+    elements.compassHeading.textContent = `${heading}° ${cardinal}`;
+
+    // Update landmark indicators if we have landmarks
+    updateLandmarkIndicators();
+}
+
+// Get cardinal direction from heading
+function getCardinalDirection(heading) {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const index = Math.round(heading / 45) % 8;
+    return directions[index];
+}
+
+// Update landmark direction indicators
+function updateLandmarkIndicators() {
+    if (!elements.landmarksList || state.compass.landmarks.length === 0) return;
+
+    const heading = state.compass.heading;
+    if (heading === null) return;
+
+    const items = elements.landmarksList.querySelectorAll('.landmark-item');
+    items.forEach((item, index) => {
+        const landmark = state.compass.landmarks[index];
+        if (!landmark) return;
+
+        // Calculate difference between current heading and landmark bearing
+        let diff = landmark.bearing - heading;
+
+        // Normalize to -180 to 180
+        while (diff > 180) diff -= 360;
+        while (diff < -180) diff += 360;
+
+        const indicator = item.querySelector('.landmark-direction');
+        const isPointingAt = Math.abs(diff) < 20; // Within 20 degrees
+
+        if (indicator) {
+            // Rotate arrow to point toward landmark
+            indicator.style.transform = `rotate(${diff}deg)`;
+            item.classList.toggle('pointing', isPointingAt);
+        }
+    });
+}
+
+// Calculate bearing from current position to a landmark
+function calculateBearing(lat1, lon1, lat2, lon2) {
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const lat1Rad = lat1 * Math.PI / 180;
+    const lat2Rad = lat2 * Math.PI / 180;
+
+    const y = Math.sin(dLon) * Math.cos(lat2Rad);
+    const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+              Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+
+    let bearing = Math.atan2(y, x) * 180 / Math.PI;
+    return (bearing + 360) % 360;
+}
+
+// Parse landmarks from AI response and geocode them
+async function parseLandmarksFromResponse(content) {
+    state.compass.landmarks = [];
+
+    // Look for the Landmarks section
+    const landmarksMatch = content.match(/##\s*(?:Landmarks|Nearby|Landmarks & Attractions)[^\n]*\n([\s\S]*?)(?=##|$)/i);
+    if (!landmarksMatch) return;
+
+    const landmarksText = landmarksMatch[1];
+
+    // Parse individual landmarks (look for bold text or list items)
+    const landmarkPattern = /\*\*([^*]+)\*\*[^(]*\(([^)]*(?:km|m|mile|minutes?)[^)]*)\)/gi;
+    const matches = [...landmarksText.matchAll(landmarkPattern)];
+
+    if (matches.length === 0) {
+        // Try simpler pattern - look for list items
+        const listPattern = /[-•]\s*\*\*([^*]+)\*\*/gi;
+        const listMatches = [...landmarksText.matchAll(listPattern)];
+        matches.push(...listMatches);
+    }
+
+    // Geocode each landmark and calculate bearing
+    for (const match of matches.slice(0, 5)) { // Limit to 5 landmarks
+        const landmarkName = match[1].trim();
+        const distanceInfo = match[2] || '';
+
+        try {
+            const coords = await geocodeLandmark(landmarkName);
+            if (coords && state.currentPosition) {
+                const bearing = calculateBearing(
+                    state.currentPosition.latitude,
+                    state.currentPosition.longitude,
+                    coords.lat,
+                    coords.lon
+                );
+
+                state.compass.landmarks.push({
+                    name: landmarkName,
+                    bearing: Math.round(bearing),
+                    distance: distanceInfo,
+                    lat: coords.lat,
+                    lon: coords.lon
+                });
+            }
+        } catch (error) {
+            console.error(`Failed to geocode landmark: ${landmarkName}`, error);
+        }
+    }
+
+    renderLandmarksList();
+}
+
+// Geocode a landmark name to coordinates
+async function geocodeLandmark(name) {
+    if (!state.currentPosition) return null;
+
+    const { latitude, longitude } = state.currentPosition;
+
+    // Search near current location
+    const searchQuery = encodeURIComponent(name);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&lat=${latitude}&lon=${longitude}&limit=1&bounded=1&viewbox=${longitude-0.5},${latitude+0.5},${longitude+0.5},${latitude-0.5}`;
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'Accept-Language': 'en',
+                'User-Agent': 'WalkieTalkie PWA (location discovery app)'
+            }
+        });
+
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        if (data && data[0]) {
+            return {
+                lat: parseFloat(data[0].lat),
+                lon: parseFloat(data[0].lon)
+            };
+        }
+    } catch (error) {
+        console.error('Geocoding error:', error);
+    }
+
+    return null;
+}
+
+// Render the landmarks list with direction indicators
+function renderLandmarksList() {
+    if (!elements.landmarksList) return;
+
+    if (state.compass.landmarks.length === 0) {
+        elements.landmarksList.innerHTML = '<p class="no-landmarks">Discover an area to see landmarks</p>';
+        return;
+    }
+
+    elements.landmarksList.innerHTML = state.compass.landmarks.map((landmark, index) => `
+        <div class="landmark-item" data-index="${index}">
+            <div class="landmark-direction">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L4 20h16L12 2z"/>
+                </svg>
+            </div>
+            <div class="landmark-info">
+                <span class="landmark-name">${escapeHtml(landmark.name)}</span>
+                <span class="landmark-bearing">${landmark.bearing}° ${getCardinalDirection(landmark.bearing)}${landmark.distance ? ' • ' + landmark.distance : ''}</span>
+            </div>
+        </div>
+    `).join('');
+
+    // Show compass section if hidden
+    if (elements.compassSection) {
+        elements.compassSection.classList.add('has-landmarks');
+    }
 }
 
 // Load settings from localStorage
@@ -190,6 +515,16 @@ function setupEventListeners() {
     // Text size controls
     elements.textSmaller.addEventListener('click', () => adjustTextSize(-10));
     elements.textLarger.addEventListener('click', () => adjustTextSize(10));
+
+    // Compass enable button (iOS)
+    if (elements.enableCompass) {
+        elements.enableCompass.addEventListener('click', requestCompassPermission);
+    }
+
+    // Theme toggle
+    if (elements.themeToggle) {
+        elements.themeToggle.addEventListener('click', toggleTheme);
+    }
 
     // Handle escape key for modal
     document.addEventListener('keydown', (e) => {
@@ -628,6 +963,11 @@ function displayResponse(content) {
 
     // Scroll response into view
     elements.responseArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Parse landmarks for compass navigation
+    if (state.compass.supported) {
+        parseLandmarksFromResponse(content);
+    }
 }
 
 // Format the response (basic markdown to HTML)

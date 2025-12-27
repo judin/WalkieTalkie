@@ -687,9 +687,260 @@ body {
     }
 }
 
-/* Dark mode */
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    background: none;
+    border: none;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--bg-subtle);
+    color: var(--text);
+}
+
+.theme-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Compass Section */
+.compass-section {
+    background: var(--bg-subtle);
+    border-radius: var(--radius);
+    padding: 16px;
+}
+
+.compass-section.not-supported {
+    display: none;
+}
+
+.compass-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.compass-rose-container {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.compass-rose {
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    position: relative;
+    transition: transform 0.1s ease-out;
+    background: var(--bg);
+}
+
+.compass-needle {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 20px solid #ef4444;
+}
+
+.compass-needle::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: -6px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 20px solid var(--text-muted);
+}
+
+.compass-cardinal {
+    position: absolute;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.compass-cardinal.n {
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ef4444;
+}
+
+.compass-cardinal.s {
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.compass-cardinal.e {
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.compass-cardinal.w {
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.compass-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.compass-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.compass-heading {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+.enable-compass-btn {
+    margin-left: auto;
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: white;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.enable-compass-btn:hover {
+    background: #047857;
+}
+
+/* Landmarks List */
+.landmarks-list {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+}
+
+.no-landmarks {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 8px 0;
+}
+
+.landmark-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    transition: var(--transition);
+}
+
+.landmark-item:last-child {
+    margin-bottom: 0;
+}
+
+.landmark-item.pointing {
+    background: var(--accent-light);
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.landmark-direction {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: transform 0.1s ease-out;
+    flex-shrink: 0;
+}
+
+.landmark-item.pointing .landmark-direction {
+    color: var(--accent);
+}
+
+.landmark-direction svg {
+    transform: rotate(0deg);
+}
+
+.landmark-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.landmark-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.landmark-bearing {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Dark mode - via data attribute (manual toggle) */
+[data-theme="dark"] {
+    --primary: #f9fafb;
+    --primary-soft: #d1d5db;
+    --accent: #10b981;
+    --accent-light: #064e3b;
+    --text: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --bg: #111827;
+    --bg-subtle: #1f2937;
+    --border: #374151;
+    --border-light: #1f2937;
+}
+
+[data-theme="dark"] .header {
+    background: rgba(17,24,39,0.9);
+}
+
+[data-theme="dark"] .location-icon {
+    background: var(--accent);
+}
+
+/* System preference fallback (when no theme set) */
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme]) {
         --primary: #f9fafb;
         --primary-soft: #d1d5db;
         --accent: #10b981;
@@ -703,12 +954,8 @@ body {
         --border-light: #1f2937;
     }
 
-    .header {
+    :root:not([data-theme]) .header {
         background: rgba(17,24,39,0.9);
-    }
-
-    .location-icon {
-        background: var(--accent);
     }
 }
 
