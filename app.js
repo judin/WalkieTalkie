@@ -57,7 +57,9 @@ const elements = {
     landmarksList: document.getElementById('landmarksList'),
     enableCompass: document.getElementById('enableCompass'),
     // Theme toggle
-    themeToggle: document.getElementById('themeToggle')
+    themeToggle: document.getElementById('themeToggle'),
+    // Refresh location
+    refreshLocation: document.getElementById('refreshLocation')
 };
 
 // Initialize the application
@@ -526,6 +528,11 @@ function setupEventListeners() {
         elements.themeToggle.addEventListener('click', toggleTheme);
     }
 
+    // Refresh location
+    if (elements.refreshLocation) {
+        elements.refreshLocation.addEventListener('click', refreshLocation);
+    }
+
     // Handle escape key for modal
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && elements.settingsModal.classList.contains('active')) {
@@ -581,6 +588,43 @@ function requestLocationPermission() {
         handlePositionSuccess,
         handlePositionError,
         options
+    );
+}
+
+// Refresh location - force a new high-accuracy reading
+function refreshLocation() {
+    if (!navigator.geolocation) {
+        showToast('Geolocation not supported', 'error');
+        return;
+    }
+
+    // Add spinning animation
+    if (elements.refreshLocation) {
+        elements.refreshLocation.classList.add('refreshing');
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            handlePositionSuccess(position);
+            // Force geocoding update
+            state.currentLocationName = null;
+            reverseGeocode(position.coords.latitude, position.coords.longitude);
+            showToast('Location updated', 'success');
+            if (elements.refreshLocation) {
+                elements.refreshLocation.classList.remove('refreshing');
+            }
+        },
+        (error) => {
+            handlePositionError(error);
+            if (elements.refreshLocation) {
+                elements.refreshLocation.classList.remove('refreshing');
+            }
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
     );
 }
 

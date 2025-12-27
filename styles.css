@@ -213,6 +213,36 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+.refresh-location-btn {
+    background: none;
+    border: none;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.refresh-location-btn:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+.refresh-location-btn.refreshing svg {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .location-card.error .location-icon {
     background: #ef4444;
 }
