@@ -32,12 +32,18 @@
         <!-- Header -->
         <header class="header">
             <h1 class="logo">WalkieTalkie</h1>
-            <button class="settings-btn" id="settingsBtn" aria-label="Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m18.07-4.93l-4.24 4.24m-5.66 5.66l-4.24 4.24m0-14.14l4.24 4.24m5.66 5.66l4.24 4.24"></path>
-                </svg>
-            </button>
+            <div class="header-controls">
+                <div class="text-size-controls">
+                    <button class="text-size-btn" id="textSmaller" aria-label="Smaller text">−</button>
+                    <button class="text-size-btn" id="textLarger" aria-label="Larger text">+</button>
+                </div>
+                <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m18.07-4.93l-4.24 4.24m-5.66 5.66l-4.24 4.24m0-14.14l4.24 4.24m5.66 5.66l4.24 4.24"></path>
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <!-- Main Content -->

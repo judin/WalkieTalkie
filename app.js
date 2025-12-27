@@ -12,6 +12,7 @@ const state = {
     watchId: null,
     map: null,
     userMarker: null,
+    textSize: 100, // percentage
     history: [],
     settings: {
         apiKey: '',
@@ -39,17 +40,44 @@ const elements = {
     interests: document.getElementById('interests'),
     saveSettings: document.getElementById('saveSettings'),
     clearHistory: document.getElementById('clearHistory'),
-    toastContainer: document.getElementById('toastContainer')
+    toastContainer: document.getElementById('toastContainer'),
+    textSmaller: document.getElementById('textSmaller'),
+    textLarger: document.getElementById('textLarger')
 };
 
 // Initialize the application
 function init() {
     loadSettings();
     loadHistory();
+    loadTextSize();
     setupEventListeners();
     initMap();
     requestLocationPermission();
     registerServiceWorker();
+}
+
+// Load text size from localStorage
+function loadTextSize() {
+    const saved = localStorage.getItem('walkietalkie_textsize');
+    if (saved) {
+        state.textSize = parseInt(saved, 10);
+        applyTextSize();
+    }
+}
+
+// Apply current text size to the page
+function applyTextSize() {
+    document.documentElement.style.fontSize = `${state.textSize}%`;
+}
+
+// Adjust text size
+function adjustTextSize(delta) {
+    const newSize = Math.min(150, Math.max(75, state.textSize + delta));
+    if (newSize !== state.textSize) {
+        state.textSize = newSize;
+        applyTextSize();
+        localStorage.setItem('walkietalkie_textsize', state.textSize);
+    }
 }
 
 // Initialize the Leaflet map
@@ -158,6 +186,10 @@ function setupEventListeners() {
     elements.saveSettings.addEventListener('click', saveSettings);
     elements.clearHistory.addEventListener('click', clearHistory);
     elements.toggleApiKey.addEventListener('click', toggleApiKeyVisibility);
+
+    // Text size controls
+    elements.textSmaller.addEventListener('click', () => adjustTextSize(-10));
+    elements.textLarger.addEventListener('click', () => adjustTextSize(10));
 
     // Handle escape key for modal
     document.addEventListener('keydown', (e) => {
@@ -514,36 +546,61 @@ function buildPrompt(latitude, longitude, detailLevel, interests, locationName) 
         basePrompt += ` (${locationName})`;
     }
 
-    basePrompt += `.\n\nWhat's interesting about this place?`;
+    basePrompt += `.`;
 
     if (interests) {
         basePrompt += `\n\nI'm particularly interested in: ${interests}`;
     }
 
+    // Request structured response with clear sections
     switch (detailLevel) {
         case 'brief':
-            basePrompt += `\n\nPlease provide a brief overview (2-3 short paragraphs) covering:
-- What area/neighborhood/region this is
-- One or two notable things nearby
-- A quick interesting fact about the area`;
+            basePrompt += `\n\nGive me a quick rundown using these sections:
+
+## About This Area
+One short paragraph on where I am.
+
+## Nearby
+2-3 places or landmarks worth knowing about (with rough distances if possible).
+
+## Quick Fact
+One interesting thing about this area.`;
             break;
         case 'detailed':
-            basePrompt += `\n\nPlease provide a detailed exploration including:
-- The specific area/neighborhood/region and its character
-- Historical background of this area
-- Notable landmarks, attractions, or points of interest nearby
-- Natural features (parks, water bodies, terrain)
-- Local culture, food, or unique characteristics
-- Interesting facts or lesser-known information
-- Suggestions for things to see or do while here`;
+            basePrompt += `\n\nTell me about this place using these sections:
+
+## About This Area
+What kind of place is this? What's its character?
+
+## Landmarks & Attractions
+Notable places nearby I could visit or see. Include approximate distances.
+
+## History
+Key historical background of this area.
+
+## Local Life
+Culture, food spots, or things the area is known for.
+
+## Interesting Facts
+3-4 lesser-known or surprising things about this area.
+
+## What To Do
+Suggestions for exploring while I'm here.`;
             break;
         default: // moderate
-            basePrompt += `\n\nPlease provide a balanced overview including:
-- What area/neighborhood/region this is
-- Notable nearby landmarks or attractions
-- Key historical or cultural points
-- 2-3 interesting facts about the area
-- A suggestion or two for what to explore`;
+            basePrompt += `\n\nTell me about this place using these sections:
+
+## About This Area
+Brief description of where I am and what it's like.
+
+## Landmarks & Attractions
+3-4 notable places nearby worth knowing about. Include approximate distances where possible.
+
+## Interesting Facts
+2-3 things that make this area unique or surprising.
+
+## Worth Checking Out
+A couple suggestions for what to see or do here.`;
     }
 
     return basePrompt;
