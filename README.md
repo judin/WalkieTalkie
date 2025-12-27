@@ -22,6 +22,12 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.5.5
+- Animated transition from welcome panel to location/map
+- Welcome panel slides up and fades out
+- Location card animates in first, then map slides down
+- Smoother sequenced reveal on first discovery
+
 ### v1.5.4
 - Filter non-touristy locations from compass (business parks, offices, etc.)
 - Fixed rainbow animation not showing in dark mode

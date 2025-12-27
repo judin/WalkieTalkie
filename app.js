@@ -1038,20 +1038,36 @@ function getLocationAsync() {
             return;
         }
 
+        // Start welcome panel exit animation
+        const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
+        if (welcomePanel && !welcomePanel.classList.contains('hidden')) {
+            welcomePanel.classList.add('hiding');
+        }
+
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 handlePositionSuccess(position);
                 // Start geocoding in background
                 reverseGeocode(position.coords.latitude, position.coords.longitude);
 
-                // Show map and location card with animation
-                elements.mapContainer.classList.add('visible');
-                elements.locationCard.classList.add('visible');
+                // Animate in sequence: location card first, then map
+                setTimeout(() => {
+                    elements.locationCard.classList.add('visible');
+
+                    // Then map after location card starts
+                    setTimeout(() => {
+                        elements.mapContainer.classList.add('visible');
+                    }, 150);
+                }, 200);
 
                 resolve(position);
             },
             (error) => {
                 handlePositionError(error);
+                // Remove hiding class if error
+                if (welcomePanel) {
+                    welcomePanel.classList.remove('hiding');
+                }
                 reject(error);
             },
             {
@@ -1237,6 +1253,7 @@ function getMaxTokens(detailLevel) {
 function displayResponse(content) {
     const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
     if (welcomePanel) {
+        welcomePanel.classList.remove('hiding');
         welcomePanel.classList.add('hidden');
     }
 

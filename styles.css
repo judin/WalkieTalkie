@@ -506,8 +506,23 @@ body {
     padding: 14px 48px;
 }
 
+.welcome-panel.hiding {
+    animation: welcome-exit 0.4s ease forwards;
+}
+
 .welcome-panel.hidden {
     display: none;
+}
+
+@keyframes welcome-exit {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
 }
 
 .response-content {
