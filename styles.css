@@ -96,10 +96,8 @@ h1, h2, h3, h4, h5, h6 {
 .text-size-btn {
     background: none;
     border: none;
-    width: 36px;
+    width: 32px;
     height: 36px;
-    font-size: 1.25rem;
-    font-weight: 600;
     cursor: pointer;
     color: var(--text-secondary);
     transition: var(--transition);
@@ -115,7 +113,24 @@ h1, h2, h3, h4, h5, h6 {
 
 .text-size-btn:active {
     background: var(--primary-color);
+}
+
+.text-size-btn:active .text-size-icon {
     color: white;
+}
+
+.text-size-icon {
+    font-family: 'Onest', sans-serif;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.text-size-icon.small {
+    font-size: 0.75rem;
+}
+
+.text-size-icon.large {
+    font-size: 1.1rem;
 }
 
 .settings-btn {
