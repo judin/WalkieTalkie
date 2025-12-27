@@ -674,6 +674,7 @@ body {
     cursor: pointer;
     transition: var(--transition);
     border: 1px solid var(--border-light);
+    position: relative;
 }
 
 .history-card:hover {
@@ -683,6 +684,37 @@ body {
 
 .history-card:active {
     transform: scale(0.98);
+}
+
+.history-card-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 10;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+.history-card:hover .history-card-delete {
+    opacity: 1;
+}
+
+.history-card-delete:hover {
+    background: rgba(239, 68, 68, 0.9);
+}
+
+.history-card-delete:active {
+    transform: scale(0.9);
 }
 
 .history-card-map {

@@ -22,6 +22,11 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.5.3
+- Added delete button (X) to history cards
+- Shows on hover, confirms before deleting
+- Red highlight on delete button hover
+
 ### v1.5.2
 - Fixed welcome panel layout - features now display horizontally
 - Moved Discover button inside welcome panel (below features)

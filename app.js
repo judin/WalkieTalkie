@@ -1403,6 +1403,12 @@ function renderHistory() {
         const shortLocation = locationDisplay.split(',')[0];
         return `
             <div class="history-card" data-id="${entry.id}">
+                <button class="history-card-delete" aria-label="Delete">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
                 <div class="history-card-map" style="background-image: url('${mapUrl}')"></div>
                 <div class="history-card-content">
                     <div class="history-card-location-wrapper">
@@ -1416,6 +1422,21 @@ function renderHistory() {
 
     // Add click handlers and check for overflow on card locations
     elements.historyList.querySelectorAll('.history-card').forEach(card => {
+        // Delete button handler
+        const deleteBtn = card.querySelector('.history-card-delete');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent card click
+            const id = parseInt(card.dataset.id);
+            const entry = state.history.find(h => h.id === id);
+            if (entry) {
+                const locationName = entry.locationName ? entry.locationName.split(',')[0] : 'this location';
+                if (confirm(`Remove "${locationName}" from history?`)) {
+                    deleteHistoryEntry(id);
+                }
+            }
+        });
+
+        // Card click handler
         card.addEventListener('click', () => {
             const id = parseInt(card.dataset.id);
             const entry = state.history.find(h => h.id === id);
@@ -1431,6 +1452,14 @@ function renderHistory() {
             wrapper.classList.add('overflow');
         }
     });
+}
+
+// Delete a single history entry
+function deleteHistoryEntry(id) {
+    state.history = state.history.filter(h => h.id !== id);
+    saveHistory();
+    renderHistory();
+    showToast('Removed from history', 'success');
 }
 
 // Format time ago
