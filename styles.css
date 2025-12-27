@@ -309,9 +309,6 @@ body {
 
 /* Response Area */
 .response-area {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     overflow: hidden;
 }
 
@@ -337,7 +334,6 @@ body {
 
 .response-content {
     display: none;
-    padding: 24px;
 }
 
 .response-content.active {
