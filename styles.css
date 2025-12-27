@@ -234,13 +234,17 @@ body {
     color: var(--text);
 }
 
-.refresh-location-btn.refreshing svg {
-    animation: spin 1s linear infinite;
+.refresh-location-btn.refreshing {
+    color: var(--accent);
 }
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+.refresh-location-btn.refreshing svg {
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
 
 .location-card.error .location-icon {
