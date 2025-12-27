@@ -239,8 +239,13 @@ body {
 }
 
 .location-name-wrapper.overflow .location-name {
-    animation: marquee-bounce 8s ease-in-out infinite;
-    animation-delay: 2s;
+    animation: location-marquee 10s ease-in-out infinite;
+}
+
+@keyframes location-marquee {
+    0%, 20% { transform: translateX(0); }
+    40%, 60% { transform: translateX(calc(-100% + 200px)); }
+    80%, 100% { transform: translateX(0); }
 }
 
 .location-coords-small {
