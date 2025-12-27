@@ -255,9 +255,10 @@ body {
 .map-container {
     position: relative;
     z-index: 1;
-    border-radius: var(--radius);
     overflow: hidden;
-    border: 1px solid var(--border);
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    width: 100vw;
 }
 
 #map {
