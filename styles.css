@@ -171,6 +171,31 @@ body {
     justify-content: center;
     color: white;
     flex-shrink: 0;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.location-icon:hover {
+    transform: scale(1.05);
+}
+
+.location-icon:active {
+    transform: scale(0.95);
+}
+
+.location-icon.refreshing {
+    background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #5f27cd);
+    background-size: 400% 400%;
+    animation: rainbow-pulse 1.5s ease infinite;
+}
+
+@keyframes rainbow-pulse {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .location-icon svg {
@@ -261,39 +286,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.refresh-location-btn {
-    background: none;
-    border: none;
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
-    color: var(--text-muted);
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-    flex-shrink: 0;
-}
-
-.refresh-location-btn:hover {
-    background: var(--bg);
-    color: var(--text);
-}
-
-.refresh-location-btn.refreshing {
-    color: var(--accent);
-}
-
-.refresh-location-btn.refreshing svg {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
 
 .location-card.error .location-icon {
     background: #ef4444;

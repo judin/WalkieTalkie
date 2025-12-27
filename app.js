@@ -64,8 +64,8 @@ const elements = {
     themeToggle: document.getElementById('themeToggle'),
     // Extra content
     extraContentSection: document.getElementById('extraContentSection'),
-    // Refresh location
-    refreshLocation: document.getElementById('refreshLocation')
+    // Location icon (for refresh)
+    locationIcon: document.getElementById('locationIcon')
 };
 
 // Initialize the application
@@ -653,9 +653,9 @@ function setupEventListeners() {
         elements.themeToggle.addEventListener('click', toggleTheme);
     }
 
-    // Refresh location
-    if (elements.refreshLocation) {
-        elements.refreshLocation.addEventListener('click', refreshLocation);
+    // Refresh location via location icon
+    if (elements.locationIcon) {
+        elements.locationIcon.addEventListener('click', refreshLocation);
     }
 
     // Extra content buttons
@@ -722,18 +722,18 @@ function getLocation(showFeedback = true) {
 
     // Add animation and track start time for minimum duration
     const animationStart = Date.now();
-    const minAnimationDuration = 1000; // At least one full rotation
+    const minAnimationDuration = 1500; // Show rainbow animation for at least 1.5s
 
-    if (elements.refreshLocation) {
-        elements.refreshLocation.classList.add('refreshing');
+    if (elements.locationIcon) {
+        elements.locationIcon.classList.add('refreshing');
     }
 
     const stopAnimation = () => {
         const elapsed = Date.now() - animationStart;
         const remaining = Math.max(0, minAnimationDuration - elapsed);
         setTimeout(() => {
-            if (elements.refreshLocation) {
-                elements.refreshLocation.classList.remove('refreshing');
+            if (elements.locationIcon) {
+                elements.locationIcon.classList.remove('refreshing');
             }
         }, remaining);
     };
