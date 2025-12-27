@@ -577,28 +577,18 @@ function requestLocationPermission() {
         return;
     }
 
-    const options = {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 30000
-    };
-
-    // Watch position for continuous updates
-    state.watchId = navigator.geolocation.watchPosition(
-        handlePositionSuccess,
-        handlePositionError,
-        options
-    );
+    // Get initial location once
+    getLocation(false);
 }
 
-// Refresh location - force a new high-accuracy reading
-function refreshLocation() {
+// Get current location
+function getLocation(showFeedback = true) {
     if (!navigator.geolocation) {
-        showToast('Geolocation not supported', 'error');
+        if (showFeedback) showToast('Geolocation not supported', 'error');
         return;
     }
 
-    // Add spinning animation
+    // Add animation
     if (elements.refreshLocation) {
         elements.refreshLocation.classList.add('refreshing');
     }
@@ -606,10 +596,10 @@ function refreshLocation() {
     navigator.geolocation.getCurrentPosition(
         (position) => {
             handlePositionSuccess(position);
-            // Force geocoding update
+            // Update geocoding
             state.currentLocationName = null;
             reverseGeocode(position.coords.latitude, position.coords.longitude);
-            showToast('Location updated', 'success');
+            if (showFeedback) showToast('Location updated', 'success');
             if (elements.refreshLocation) {
                 elements.refreshLocation.classList.remove('refreshing');
             }
@@ -622,17 +612,19 @@ function refreshLocation() {
         },
         {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: 15000,
             maximumAge: 0
         }
     );
 }
 
+// Refresh location button handler
+function refreshLocation() {
+    getLocation(true);
+}
+
 // Handle successful position update
 function handlePositionSuccess(position) {
-    const prevLat = state.currentPosition?.latitude;
-    const prevLon = state.currentPosition?.longitude;
-
     state.currentPosition = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -643,14 +635,6 @@ function handlePositionSuccess(position) {
     updateLocationDisplay();
     updateDiscoverButton();
     updateMap();
-
-    // Only fetch new location name if position changed significantly (>100m)
-    const shouldGeocode = !prevLat || !prevLon ||
-        getDistanceInMeters(prevLat, prevLon, position.coords.latitude, position.coords.longitude) > 100;
-
-    if (shouldGeocode && !state.isGeocodingLoading) {
-        reverseGeocode(position.coords.latitude, position.coords.longitude);
-    }
 }
 
 // Calculate distance between two coordinates in meters
