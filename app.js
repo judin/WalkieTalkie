@@ -1331,7 +1331,16 @@ function addToHistory(content) {
     renderHistory();
 }
 
-// Render history list
+// Generate static map URL for history card
+function getStaticMapUrl(lat, lon) {
+    // Use OpenStreetMap tiles to create a static map image
+    const zoom = 15;
+    const x = Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
+    const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+    return `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+}
+
+// Render history list as horizontal cards
 function renderHistory() {
     if (state.history.length === 0) {
         elements.historySection.classList.remove('visible');
@@ -1341,21 +1350,24 @@ function renderHistory() {
     elements.historySection.classList.add('visible');
     elements.historyList.innerHTML = state.history.map(entry => {
         const locationDisplay = entry.locationName || `${entry.latitude.toFixed(4)}, ${entry.longitude.toFixed(4)}`;
+        const mapUrl = getStaticMapUrl(entry.latitude, entry.longitude);
+        // Get just the first part of location name for compact display
+        const shortLocation = locationDisplay.split(',')[0];
         return `
-            <div class="history-item" data-id="${entry.id}">
-                <div class="history-item-header">
-                    <span class="history-item-location">${escapeHtml(locationDisplay)}</span>
-                    <span class="history-item-time">${formatTimeAgo(entry.timestamp)}</span>
+            <div class="history-card" data-id="${entry.id}">
+                <div class="history-card-map" style="background-image: url('${mapUrl}')"></div>
+                <div class="history-card-content">
+                    <div class="history-card-location">${escapeHtml(shortLocation)}</div>
+                    <div class="history-card-time">${formatTimeAgo(entry.timestamp)}</div>
                 </div>
-                <p class="history-item-preview">${escapeHtml(entry.preview)}</p>
             </div>
         `;
     }).join('');
 
-    // Add click handlers for history items
-    elements.historyList.querySelectorAll('.history-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const id = parseInt(item.dataset.id);
+    // Add click handlers for history cards
+    elements.historyList.querySelectorAll('.history-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.id);
             const entry = state.history.find(h => h.id === id);
             if (entry) {
                 displayResponse(entry.content);
