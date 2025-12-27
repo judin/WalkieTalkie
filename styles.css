@@ -159,6 +159,19 @@ body {
     padding: 16px;
     background: var(--bg-subtle);
     border-radius: var(--radius);
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    max-height: 0;
+    padding: 0 16px;
+    overflow: hidden;
+    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, padding 0.4s ease;
+}
+
+.location-card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 100px;
+    padding: 16px;
 }
 
 .location-icon {

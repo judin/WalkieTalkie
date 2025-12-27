@@ -76,9 +76,9 @@ function init() {
     loadTheme();
     setupEventListeners();
     initMap();
-    requestLocationPermission();
     initCompass();
     registerServiceWorker();
+    updateDiscoverButton();
 }
 
 // Load text size from localStorage
@@ -702,17 +702,6 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
-// Request location permission and start watching
-function requestLocationPermission() {
-    if (!navigator.geolocation) {
-        updateLocationStatus('Geolocation is not supported by your browser', true);
-        return;
-    }
-
-    // Get initial location once
-    getLocation(false);
-}
-
 // Get current location
 function getLocation(showFeedback = true) {
     if (!navigator.geolocation) {
@@ -744,6 +733,8 @@ function getLocation(showFeedback = true) {
             // Update geocoding
             state.currentLocationName = null;
             reverseGeocode(position.coords.latitude, position.coords.longitude);
+            // Show location card if not already visible
+            elements.locationCard.classList.add('visible');
             if (showFeedback) showToast('Location updated', 'success');
             stopAnimation();
         },
@@ -951,15 +942,12 @@ function updateLocationStatus(message, isError = false) {
 
 // Update discover button state
 function updateDiscoverButton() {
-    const hasLocation = state.currentPosition !== null;
     const hasApiKey = state.settings.apiKey.length > 0;
 
-    elements.discoverBtn.disabled = !hasLocation || state.isLoading;
+    elements.discoverBtn.disabled = state.isLoading;
 
-    if (!hasApiKey && hasLocation) {
+    if (!hasApiKey) {
         elements.discoverBtn.querySelector('.discover-btn-text').textContent = 'Set API Key in Settings';
-    } else if (!hasLocation) {
-        elements.discoverBtn.querySelector('.discover-btn-text').textContent = 'Waiting for Location...';
     } else {
         elements.discoverBtn.querySelector('.discover-btn-text').textContent = 'Discover This Area';
     }
@@ -967,11 +955,6 @@ function updateDiscoverButton() {
 
 // Handle discover button click
 async function handleDiscover() {
-    if (!state.currentPosition) {
-        showToast('Location not available', 'error');
-        return;
-    }
-
     if (!state.settings.apiKey) {
         openModal();
         showToast('Please enter your OpenAI API key', 'error');
@@ -981,6 +964,16 @@ async function handleDiscover() {
     setLoading(true);
 
     try {
+        // Get location first if not available
+        if (!state.currentPosition) {
+            await getLocationAsync();
+        }
+
+        if (!state.currentPosition) {
+            showToast('Could not get your location', 'error');
+            return;
+        }
+
         const response = await getAIResponse();
         displayResponse(response);
         addToHistory(response);
@@ -990,6 +983,53 @@ async function handleDiscover() {
     } finally {
         setLoading(false);
     }
+}
+
+// Get location as a promise
+function getLocationAsync() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+            return;
+        }
+
+        // Show rainbow animation on location icon
+        if (elements.locationIcon) {
+            elements.locationIcon.classList.add('refreshing');
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                handlePositionSuccess(position);
+                // Start geocoding in background
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+                // Show location card with animation
+                elements.locationCard.classList.add('visible');
+
+                // Stop rainbow animation
+                setTimeout(() => {
+                    if (elements.locationIcon) {
+                        elements.locationIcon.classList.remove('refreshing');
+                    }
+                }, 500);
+
+                resolve(position);
+            },
+            (error) => {
+                handlePositionError(error);
+                if (elements.locationIcon) {
+                    elements.locationIcon.classList.remove('refreshing');
+                }
+                reject(error);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    });
 }
 
 // Set loading state
