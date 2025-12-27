@@ -18,6 +18,7 @@ const state = {
         apiKey: '',
         detailLevel: 'moderate',
         language: 'en-GB',
+        travellerType: '',
         interests: ''
     },
     // Compass state
@@ -46,6 +47,7 @@ const elements = {
     toggleApiKey: document.getElementById('toggleApiKey'),
     detailLevel: document.getElementById('detailLevel'),
     language: document.getElementById('language'),
+    travellerType: document.getElementById('travellerType'),
     interests: document.getElementById('interests'),
     saveSettings: document.getElementById('saveSettings'),
     clearHistory: document.getElementById('clearHistory'),
@@ -557,6 +559,7 @@ function loadSettings() {
             elements.apiKeyInput.value = state.settings.apiKey;
             elements.detailLevel.value = state.settings.detailLevel;
             elements.language.value = state.settings.language || 'en-GB';
+            elements.travellerType.value = state.settings.travellerType || '';
             elements.interests.value = state.settings.interests;
         } catch (e) {
             console.error('Failed to load settings:', e);
@@ -569,6 +572,7 @@ function saveSettings() {
     state.settings.apiKey = elements.apiKeyInput.value.trim();
     state.settings.detailLevel = elements.detailLevel.value;
     state.settings.language = elements.language.value;
+    state.settings.travellerType = elements.travellerType.value;
     state.settings.interests = elements.interests.value.trim();
 
     localStorage.setItem('walkietalkie_settings', JSON.stringify(state.settings));
@@ -955,10 +959,23 @@ function setLoading(loading) {
     elements.discoverBtn.disabled = loading;
 }
 
+// Get traveller-specific tips instruction
+function getTravellerTips(travellerType) {
+    const tips = {
+        family: 'Include practical tips for families: mention nearby public toilets, playgrounds, family-friendly cafes, pushchair/pram accessibility, and child-friendly attractions.',
+        couple: 'Include tips for couples: mention romantic spots, nice restaurants for two, scenic walks, and atmospheric venues.',
+        solo: 'Include tips for solo travellers: mention safe areas, social spots like cafes with good atmosphere, and places good for people-watching.',
+        daytrip: 'Include tips for day trippers: mention the must-sees, suggest efficient routes, highlight public toilets, and note places for a quick bite.',
+        lgbt: 'Include tips relevant to LGBT+ visitors: mention any LGBT+ friendly venues, bars, or areas known for being welcoming and inclusive.',
+        accessible: 'Include accessibility information: mention step-free access, nearby accessible toilets, wheelchair-friendly routes, and any mobility considerations for the area.'
+    };
+    return tips[travellerType] || '';
+}
+
 // Get AI response from OpenAI
 async function getAIResponse() {
     const { latitude, longitude } = state.currentPosition;
-    const { detailLevel, interests, language } = state.settings;
+    const { detailLevel, interests, language, travellerType } = state.settings;
     const locationName = state.currentLocationName;
 
     // Build the prompt based on settings
@@ -968,6 +985,9 @@ async function getAIResponse() {
     const languageInstruction = language === 'en-US'
         ? 'Write in American English (use American spelling and expressions).'
         : 'Write in British English (use British spelling and expressions).';
+
+    // Traveller-specific tips
+    const travellerTips = getTravellerTips(travellerType);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -980,7 +1000,7 @@ async function getAIResponse() {
             messages: [
                 {
                     role: 'system',
-                    content: `You're a friendly local who knows this area well. Share interesting facts and useful info in a natural, conversational way - like chatting with a friend. Keep it real: stick to facts, skip the fluff, and don't make things up. If you're not sure about something specific to this exact spot, focus on what you know about the general area. Write in short, punchy paragraphs. No corporate speak or AI-sounding phrases. ${languageInstruction}`
+                    content: `You're a friendly local who knows this area well. Share interesting facts and useful info in a natural, conversational way - like chatting with a friend. Keep it real: stick to facts, skip the fluff, and don't make things up. If you're not sure about something specific to this exact spot, focus on what you know about the general area. Write in short, punchy paragraphs. No corporate speak or AI-sounding phrases. ${languageInstruction}${travellerTips ? ' ' + travellerTips : ''}`
                 },
                 {
                     role: 'user',
