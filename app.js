@@ -966,6 +966,11 @@ async function handleDiscover(forceLocationRefresh = false) {
 
     setLoading(true);
 
+    // Start rainbow animation on location icon
+    if (elements.locationIcon) {
+        elements.locationIcon.classList.add('refreshing');
+    }
+
     try {
         // Get location (always refresh if forced, or if no current position)
         if (forceLocationRefresh || !state.currentPosition) {
@@ -990,6 +995,10 @@ async function handleDiscover(forceLocationRefresh = false) {
         showToast(error.message || 'Failed to get information about this area', 'error');
     } finally {
         setLoading(false);
+        // Stop rainbow animation
+        if (elements.locationIcon) {
+            elements.locationIcon.classList.remove('refreshing');
+        }
     }
 }
 
@@ -999,11 +1008,6 @@ function getLocationAsync() {
         if (!navigator.geolocation) {
             reject(new Error('Geolocation not supported'));
             return;
-        }
-
-        // Show rainbow animation on location icon
-        if (elements.locationIcon) {
-            elements.locationIcon.classList.add('refreshing');
         }
 
         navigator.geolocation.getCurrentPosition(
@@ -1016,20 +1020,10 @@ function getLocationAsync() {
                 elements.mapContainer.classList.add('visible');
                 elements.locationCard.classList.add('visible');
 
-                // Stop rainbow animation
-                setTimeout(() => {
-                    if (elements.locationIcon) {
-                        elements.locationIcon.classList.remove('refreshing');
-                    }
-                }, 500);
-
                 resolve(position);
             },
             (error) => {
                 handlePositionError(error);
-                if (elements.locationIcon) {
-                    elements.locationIcon.classList.remove('refreshing');
-                }
                 reject(error);
             },
             {
