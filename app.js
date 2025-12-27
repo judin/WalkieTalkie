@@ -1357,7 +1357,9 @@ function renderHistory() {
             <div class="history-card" data-id="${entry.id}">
                 <div class="history-card-map" style="background-image: url('${mapUrl}')"></div>
                 <div class="history-card-content">
-                    <div class="history-card-location">${escapeHtml(shortLocation)}</div>
+                    <div class="history-card-location-wrapper">
+                        <div class="history-card-location">${escapeHtml(shortLocation)}</div>
+                    </div>
                     <div class="history-card-time">${formatTimeAgo(entry.timestamp)}</div>
                 </div>
             </div>
@@ -1374,10 +1376,11 @@ function renderHistory() {
             }
         });
 
-        // Check if location text overflows and add marquee
+        // Check if location text overflows and add marquee with fade
+        const wrapper = card.querySelector('.history-card-location-wrapper');
         const locationEl = card.querySelector('.history-card-location');
-        if (locationEl && locationEl.scrollWidth > locationEl.parentElement.offsetWidth) {
-            locationEl.classList.add('overflow');
+        if (wrapper && locationEl && locationEl.scrollWidth > wrapper.offsetWidth) {
+            wrapper.classList.add('overflow');
         }
     });
 }
