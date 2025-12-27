@@ -474,7 +474,9 @@ body {
 
 .welcome-features {
     display: flex;
-    gap: 20px;
+    flex-direction: row;
+    justify-content: center;
+    gap: 32px;
     margin-top: 8px;
 }
 
@@ -482,18 +484,26 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     color: var(--text-muted);
 }
 
 .welcome-feature svg {
     color: var(--accent);
     opacity: 0.8;
+    width: 24px;
+    height: 24px;
 }
 
 .welcome-feature span {
     font-size: 0.75rem;
     white-space: nowrap;
+}
+
+.welcome-panel .discover-btn {
+    margin-top: 16px;
+    width: auto;
+    padding: 14px 48px;
 }
 
 .welcome-panel.hidden {
