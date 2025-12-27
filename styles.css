@@ -570,17 +570,18 @@ body {
 }
 
 .history-card-content {
-    padding: 10px 12px;
+    padding: 8px 10px;
+    min-width: 0;
 }
 
 .history-card-location {
     font-weight: 500;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 2px;
+    line-height: 1.2;
 }
 
 .history-card-time {
