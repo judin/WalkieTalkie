@@ -427,23 +427,25 @@ body {
     font-weight: 500;
 }
 
-/* Extra Content Section */
+/* Extra Content Section - shown after discovery */
 .extra-content-section {
-    display: none;
+    display: none !important;
     margin-top: 24px;
     padding-top: 20px;
     border-top: 1px solid var(--border-light);
 }
 
 .extra-content-section.active {
-    display: block;
+    display: block !important;
 }
 
 .extra-content-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
     margin-bottom: 12px;
     text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .extra-content-buttons {
@@ -454,18 +456,19 @@ body {
 }
 
 .extra-content-btn {
-    padding: 10px 16px;
-    background: var(--bg-subtle);
+    padding: 8px 16px;
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
-    color: var(--text);
+    border-radius: 50px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition);
+    white-space: nowrap;
 }
 
 .extra-content-btn:hover {
-    background: var(--bg);
+    background: var(--accent-light);
     border-color: var(--accent);
     color: var(--accent);
 }
@@ -476,9 +479,9 @@ body {
 }
 
 .extra-content-btn.used {
-    background: var(--accent-light);
+    background: var(--accent);
     border-color: var(--accent);
-    color: var(--accent);
+    color: white;
 }
 
 /* History Section */
@@ -838,16 +841,16 @@ body {
     height: 20px;
 }
 
-/* Compass Section */
+/* Compass Section - hidden until landmarks are loaded */
 .compass-section {
-    display: none;
+    display: none !important;
     background: var(--bg-subtle);
     border-radius: var(--radius);
     padding: 16px;
 }
 
 .compass-section.has-landmarks {
-    display: block;
+    display: block !important;
 }
 
 .compass-section.not-supported {
