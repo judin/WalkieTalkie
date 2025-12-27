@@ -1254,11 +1254,11 @@ async function getExtraContent(topic) {
 // Append extra content to the response
 function appendExtraContent(content, topic) {
     const topicTitles = {
-        eating: '🍽️ Eating Out',
-        drinks: '🍺 Drinks',
-        shopping: '🛍️ Shopping',
-        history: '📜 More History',
-        activities: '🎯 Activities'
+        eating: 'Eating Out',
+        drinks: 'Drinks',
+        shopping: 'Shopping',
+        history: 'More History',
+        activities: 'Activities'
     };
 
     const formattedContent = formatResponse(content);
