@@ -427,6 +427,60 @@ body {
     font-weight: 500;
 }
 
+/* Extra Content Section */
+.extra-content-section {
+    display: none;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+}
+
+.extra-content-section.active {
+    display: block;
+}
+
+.extra-content-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.extra-content-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.extra-content-btn {
+    padding: 10px 16px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.extra-content-btn:hover {
+    background: var(--bg);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.extra-content-btn.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.extra-content-btn.used {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 /* History Section */
 .history-section {
     display: none;
@@ -1097,6 +1151,27 @@ body {
 
 .nav-dialog-cancel:hover {
     background: var(--bg-subtle);
+}
+
+/* Footer */
+.app-footer {
+    text-align: center;
+    padding: 24px 20px;
+    margin-top: 32px;
+    border-top: 1px solid var(--border-light);
+}
+
+.app-footer p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.app-footer .version {
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.7;
 }
 
 /* Dark mode - via data attribute (manual toggle) */

@@ -62,6 +62,8 @@ const elements = {
     enableCompass: document.getElementById('enableCompass'),
     // Theme toggle
     themeToggle: document.getElementById('themeToggle'),
+    // Extra content
+    extraContentSection: document.getElementById('extraContentSection'),
     // Refresh location
     refreshLocation: document.getElementById('refreshLocation')
 };
@@ -656,6 +658,13 @@ function setupEventListeners() {
         elements.refreshLocation.addEventListener('click', refreshLocation);
     }
 
+    // Extra content buttons
+    if (elements.extraContentSection) {
+        elements.extraContentSection.querySelectorAll('.extra-content-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleExtraContent(btn));
+        });
+    }
+
     // Handle escape key for modal
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && elements.settingsModal.classList.contains('active')) {
@@ -1154,6 +1163,14 @@ function displayResponse(content) {
     elements.responseContent.innerHTML = formattedContent;
     elements.responseContent.classList.add('active');
 
+    // Show extra content buttons and reset their state
+    if (elements.extraContentSection) {
+        elements.extraContentSection.classList.add('active');
+        elements.extraContentSection.querySelectorAll('.extra-content-btn').forEach(btn => {
+            btn.classList.remove('used', 'loading');
+        });
+    }
+
     // Scroll response into view
     elements.responseArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -1161,6 +1178,96 @@ function displayResponse(content) {
     if (state.compass.supported) {
         parseLandmarksFromResponse(content);
     }
+}
+
+// Handle extra content button click
+async function handleExtraContent(btn) {
+    if (btn.classList.contains('loading') || btn.classList.contains('used')) return;
+    if (!state.currentPosition || !state.settings.apiKey) return;
+
+    const topic = btn.dataset.topic;
+    btn.classList.add('loading');
+
+    try {
+        const content = await getExtraContent(topic);
+        appendExtraContent(content, topic);
+        btn.classList.remove('loading');
+        btn.classList.add('used');
+    } catch (error) {
+        console.error('Failed to get extra content:', error);
+        showToast('Failed to load content', 'error');
+        btn.classList.remove('loading');
+    }
+}
+
+// Get extra content from AI
+async function getExtraContent(topic) {
+    const { latitude, longitude } = state.currentPosition;
+    const { language } = state.settings;
+    const locationName = state.currentLocationName;
+
+    const topicPrompts = {
+        eating: 'Tell me about places to eat nearby. Include a mix of quick bites, cafes, and restaurants. Mention cuisine types, price ranges, and any local favourites.',
+        drinks: 'Tell me about pubs, bars, and cafes for drinks nearby. Include atmosphere, what they\'re known for, and any with outdoor seating or good views.',
+        shopping: 'Tell me about shopping in this area. Include both high street shops and any independent or unique stores worth checking out.',
+        history: 'Give me more historical background about this specific area. Include interesting stories, notable events, or famous people connected to this location.',
+        activities: 'What activities and entertainment options are there nearby? Include things like cinemas, theatres, sports, parks, or unique experiences.'
+    };
+
+    const languageInstruction = language === 'en-US'
+        ? 'Write in American English.'
+        : 'Write in British English.';
+
+    let prompt = `I'm at ${locationName || `coordinates ${latitude}, ${longitude}`}. ${topicPrompts[topic]} Keep it concise and practical - just the highlights. ${languageInstruction}`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.settings.apiKey}`
+        },
+        body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You\'re a helpful local guide. Give practical, honest recommendations. Keep responses concise - around 150-200 words. Use a conversational tone.'
+                },
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            max_tokens: 400,
+            temperature: 0.7
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch extra content');
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
+
+// Append extra content to the response
+function appendExtraContent(content, topic) {
+    const topicTitles = {
+        eating: '🍽️ Eating Out',
+        drinks: '🍺 Drinks',
+        shopping: '🛍️ Shopping',
+        history: '📜 More History',
+        activities: '🎯 Activities'
+    };
+
+    const formattedContent = formatResponse(content);
+    const section = document.createElement('div');
+    section.className = 'extra-content-result';
+    section.innerHTML = `<h3>${topicTitles[topic]}</h3>${formattedContent}`;
+
+    elements.responseContent.appendChild(section);
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Format the response (basic markdown to HTML)
