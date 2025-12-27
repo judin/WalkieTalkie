@@ -18,7 +18,7 @@ const state = {
         apiKey: '',
         detailLevel: 'moderate',
         language: 'en-GB',
-        travellerType: '',
+        travellerTypes: [],
         interests: ''
     },
     // Compass state
@@ -47,7 +47,7 @@ const elements = {
     toggleApiKey: document.getElementById('toggleApiKey'),
     detailLevel: document.getElementById('detailLevel'),
     language: document.getElementById('language'),
-    travellerType: document.getElementById('travellerType'),
+    travellerTypes: document.getElementById('travellerTypes'),
     interests: document.getElementById('interests'),
     saveSettings: document.getElementById('saveSettings'),
     clearHistory: document.getElementById('clearHistory'),
@@ -556,10 +556,18 @@ function loadSettings() {
         try {
             const parsed = JSON.parse(saved);
             state.settings = { ...state.settings, ...parsed };
+            // Handle migration from old travellerType string to new array
+            if (parsed.travellerType && !parsed.travellerTypes) {
+                state.settings.travellerTypes = parsed.travellerType ? [parsed.travellerType] : [];
+            }
             elements.apiKeyInput.value = state.settings.apiKey;
             elements.detailLevel.value = state.settings.detailLevel;
             elements.language.value = state.settings.language || 'en-GB';
-            elements.travellerType.value = state.settings.travellerType || '';
+            // Set checkbox states
+            const checkboxes = elements.travellerTypes.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = (state.settings.travellerTypes || []).includes(cb.value);
+            });
             elements.interests.value = state.settings.interests;
         } catch (e) {
             console.error('Failed to load settings:', e);
@@ -572,7 +580,9 @@ function saveSettings() {
     state.settings.apiKey = elements.apiKeyInput.value.trim();
     state.settings.detailLevel = elements.detailLevel.value;
     state.settings.language = elements.language.value;
-    state.settings.travellerType = elements.travellerType.value;
+    // Get selected traveller types from checkboxes
+    const checkboxes = elements.travellerTypes.querySelectorAll('input[type="checkbox"]:checked');
+    state.settings.travellerTypes = Array.from(checkboxes).map(cb => cb.value);
     state.settings.interests = elements.interests.value.trim();
 
     localStorage.setItem('walkietalkie_settings', JSON.stringify(state.settings));
@@ -960,22 +970,31 @@ function setLoading(loading) {
 }
 
 // Get traveller-specific tips instruction
-function getTravellerTips(travellerType) {
+function getTravellerTips(travellerTypes) {
+    if (!travellerTypes || travellerTypes.length === 0) return '';
+
     const tips = {
-        family: 'Include practical tips for families: mention nearby public toilets, playgrounds, family-friendly cafes, pushchair/pram accessibility, and child-friendly attractions.',
-        couple: 'Include tips for couples: mention romantic spots, nice restaurants for two, scenic walks, and atmospheric venues.',
-        solo: 'Include tips for solo travellers: mention safe areas, social spots like cafes with good atmosphere, and places good for people-watching.',
-        daytrip: 'Include tips for day trippers: mention the must-sees, suggest efficient routes, highlight public toilets, and note places for a quick bite.',
-        lgbt: 'Include tips relevant to LGBT+ visitors: mention any LGBT+ friendly venues, bars, or areas known for being welcoming and inclusive.',
-        accessible: 'Include accessibility information: mention step-free access, nearby accessible toilets, wheelchair-friendly routes, and any mobility considerations for the area.'
+        family: 'nearby public toilets, playgrounds, family-friendly cafes, pushchair/pram accessibility, and child-friendly attractions',
+        couple: 'romantic spots, nice restaurants for two, scenic walks, and atmospheric venues',
+        solo: 'safe areas, social spots like cafes with good atmosphere, and places good for people-watching',
+        daytrip: 'the must-sees, efficient routes, public toilets, and places for a quick bite',
+        lgbt: 'LGBT+ friendly venues, bars, or areas known for being welcoming and inclusive',
+        accessible: 'step-free access, accessible toilets, wheelchair-friendly routes, and mobility considerations'
     };
-    return tips[travellerType] || '';
+
+    const selectedTips = travellerTypes
+        .map(type => tips[type])
+        .filter(Boolean);
+
+    if (selectedTips.length === 0) return '';
+
+    return `Include practical tips relevant to the traveller: ${selectedTips.join('; ')}.`;
 }
 
 // Get AI response from OpenAI
 async function getAIResponse() {
     const { latitude, longitude } = state.currentPosition;
-    const { detailLevel, interests, language, travellerType } = state.settings;
+    const { detailLevel, interests, language, travellerTypes } = state.settings;
     const locationName = state.currentLocationName;
 
     // Build the prompt based on settings
@@ -987,7 +1006,7 @@ async function getAIResponse() {
         : 'Write in British English (use British spelling and expressions).';
 
     // Traveller-specific tips
-    const travellerTips = getTravellerTips(travellerType);
+    const travellerTips = getTravellerTips(travellerTypes);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',

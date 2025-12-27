@@ -613,6 +613,41 @@ body {
     color: var(--text-muted);
 }
 
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--bg-subtle);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.checkbox-label:hover {
+    background: var(--border);
+}
+
+.checkbox-label:has(input:checked) {
+    background: var(--accent-light);
+    border-color: var(--accent);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
 .api-key-input {
     display: flex;
     gap: 8px;
