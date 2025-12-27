@@ -1035,8 +1035,13 @@ function getLocationAsync() {
             return;
         }
 
-        // Start welcome panel exit animation
+        // Start welcome panel exit animation and track timing
         const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
+        const animationStartTime = Date.now();
+        const welcomeAnimationDuration = 500; // 0.5s
+        const pauseAfterAnimation = 500; // 0.5s pause
+        const totalWaitTime = welcomeAnimationDuration + pauseAfterAnimation;
+
         if (welcomePanel && !welcomePanel.classList.contains('hidden')) {
             welcomePanel.classList.add('hiding');
         }
@@ -1047,6 +1052,10 @@ function getLocationAsync() {
                 // Start geocoding in background
                 reverseGeocode(position.coords.latitude, position.coords.longitude);
 
+                // Calculate remaining wait time (animation + pause - time already elapsed)
+                const elapsed = Date.now() - animationStartTime;
+                const remainingWait = Math.max(0, totalWaitTime - elapsed);
+
                 // Animate in sequence: location card first, then map
                 setTimeout(() => {
                     elements.locationCard.classList.add('visible');
@@ -1055,7 +1064,7 @@ function getLocationAsync() {
                     setTimeout(() => {
                         elements.mapContainer.classList.add('visible');
                     }, 150);
-                }, 200);
+                }, remainingWait);
 
                 resolve(position);
             },
