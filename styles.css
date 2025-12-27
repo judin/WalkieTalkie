@@ -145,7 +145,7 @@ body {
 
 /* Main Content */
 .main-content {
-    padding: 20px;
+    padding: 0 20px 20px 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -260,9 +260,9 @@ body {
     position: relative;
     z-index: 1;
     overflow: hidden;
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
+    margin: 0 calc(-50vw + 50%);
     width: 100vw;
+    border-radius: 0;
 }
 
 #map {
@@ -999,7 +999,7 @@ body {
 /* Small screens */
 @media (max-width: 380px) {
     .main-content {
-        padding: 16px;
+        padding: 0 16px 16px 16px;
     }
 
     .logo {
