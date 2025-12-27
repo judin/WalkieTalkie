@@ -3,7 +3,8 @@
  * Provides offline capability and caching
  */
 
-const CACHE_NAME = 'walkietalkie-v1';
+const CACHE_NAME = 'walkietalkie-v2';
+const MAP_TILE_CACHE = 'walkietalkie-tiles-v1';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -52,13 +53,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Don't cache Google Fonts API calls (let browser handle)
+    // Cache Google Fonts for offline use
     if (url.hostname.includes('googleapis.com') || url.hostname.includes('gstatic.com')) {
         event.respondWith(
             caches.match(request)
                 .then((response) => {
                     return response || fetch(request).then((fetchResponse) => {
-                        // Cache fonts for offline use
                         return caches.open(CACHE_NAME).then((cache) => {
                             cache.put(request, fetchResponse.clone());
                             return fetchResponse;
@@ -66,6 +66,47 @@ self.addEventListener('fetch', (event) => {
                     });
                 })
         );
+        return;
+    }
+
+    // Cache map tiles (OpenStreetMap)
+    if (url.hostname.includes('tile.openstreetmap.org')) {
+        event.respondWith(
+            caches.open(MAP_TILE_CACHE)
+                .then((cache) => {
+                    return cache.match(request).then((response) => {
+                        if (response) {
+                            return response;
+                        }
+                        return fetch(request).then((fetchResponse) => {
+                            cache.put(request, fetchResponse.clone());
+                            return fetchResponse;
+                        });
+                    });
+                })
+        );
+        return;
+    }
+
+    // Cache Leaflet library assets
+    if (url.hostname === 'unpkg.com') {
+        event.respondWith(
+            caches.match(request)
+                .then((response) => {
+                    return response || fetch(request).then((fetchResponse) => {
+                        return caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(request, fetchResponse.clone());
+                            return fetchResponse;
+                        });
+                    });
+                })
+        );
+        return;
+    }
+
+    // Don't cache geocoding requests
+    if (url.hostname.includes('nominatim.openstreetmap.org')) {
+        event.respondWith(fetch(request));
         return;
     }
 

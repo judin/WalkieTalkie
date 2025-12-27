@@ -6,8 +6,12 @@
 // Application state
 const state = {
     currentPosition: null,
+    currentLocationName: null,
     isLoading: false,
+    isGeocodingLoading: false,
     watchId: null,
+    map: null,
+    userMarker: null,
     history: [],
     settings: {
         apiKey: '',
@@ -43,8 +47,53 @@ function init() {
     loadSettings();
     loadHistory();
     setupEventListeners();
+    initMap();
     requestLocationPermission();
     registerServiceWorker();
+}
+
+// Initialize the Leaflet map
+function initMap() {
+    // Create map centered on a default location (will update when GPS is available)
+    state.map = L.map('map', {
+        zoomControl: true,
+        attributionControl: true
+    }).setView([51.505, -0.09], 13);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(state.map);
+
+    // Create custom icon for user location
+    const userIcon = L.divIcon({
+        className: 'custom-marker',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    });
+
+    // Create marker (hidden until we have location)
+    state.userMarker = L.marker([0, 0], { icon: userIcon }).addTo(state.map);
+    state.userMarker.setOpacity(0);
+}
+
+// Update map with current position
+function updateMap() {
+    if (!state.currentPosition || !state.map) return;
+
+    const { latitude, longitude } = state.currentPosition;
+
+    // Update marker position and show it
+    state.userMarker.setLatLng([latitude, longitude]);
+    state.userMarker.setOpacity(1);
+
+    // Add popup with location name
+    const popupContent = state.currentLocationName || 'You are here';
+    state.userMarker.bindPopup(popupContent);
+
+    // Center map on user location
+    state.map.setView([latitude, longitude], 15);
 }
 
 // Load settings from localStorage
@@ -170,6 +219,9 @@ function requestLocationPermission() {
 
 // Handle successful position update
 function handlePositionSuccess(position) {
+    const prevLat = state.currentPosition?.latitude;
+    const prevLon = state.currentPosition?.longitude;
+
     state.currentPosition = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -179,6 +231,108 @@ function handlePositionSuccess(position) {
 
     updateLocationDisplay();
     updateDiscoverButton();
+    updateMap();
+
+    // Only fetch new location name if position changed significantly (>100m)
+    const shouldGeocode = !prevLat || !prevLon ||
+        getDistanceInMeters(prevLat, prevLon, position.coords.latitude, position.coords.longitude) > 100;
+
+    if (shouldGeocode && !state.isGeocodingLoading) {
+        reverseGeocode(position.coords.latitude, position.coords.longitude);
+    }
+}
+
+// Calculate distance between two coordinates in meters
+function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // Earth's radius in meters
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Reverse geocode coordinates to get location name
+async function reverseGeocode(latitude, longitude) {
+    state.isGeocodingLoading = true;
+
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`,
+            {
+                headers: {
+                    'Accept-Language': 'en',
+                    'User-Agent': 'WalkieTalkie PWA (location discovery app)'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Geocoding failed');
+        }
+
+        const data = await response.json();
+
+        if (data && data.address) {
+            state.currentLocationName = formatLocationName(data.address, data.display_name);
+            updateLocationDisplay();
+            // Update map marker popup with location name
+            if (state.userMarker) {
+                state.userMarker.bindPopup(state.currentLocationName);
+            }
+        }
+    } catch (error) {
+        console.error('Reverse geocoding error:', error);
+        // Silently fail - coordinates will still be shown
+    } finally {
+        state.isGeocodingLoading = false;
+    }
+}
+
+// Format the location name from address components
+function formatLocationName(address, displayName) {
+    // Try to build a meaningful short name
+    const parts = [];
+
+    // Primary location identifier
+    if (address.road || address.pedestrian || address.footway) {
+        parts.push(address.road || address.pedestrian || address.footway);
+    } else if (address.neighbourhood || address.suburb) {
+        parts.push(address.neighbourhood || address.suburb);
+    } else if (address.hamlet || address.village || address.town) {
+        parts.push(address.hamlet || address.village || address.town);
+    }
+
+    // Add area context
+    if (address.suburb && !parts.includes(address.suburb)) {
+        parts.push(address.suburb);
+    } else if (address.city_district && !parts.includes(address.city_district)) {
+        parts.push(address.city_district);
+    }
+
+    // Add city/town
+    if (address.city) {
+        parts.push(address.city);
+    } else if (address.town) {
+        parts.push(address.town);
+    } else if (address.municipality) {
+        parts.push(address.municipality);
+    }
+
+    // Add country for context if we have room
+    if (parts.length < 3 && address.country) {
+        parts.push(address.country);
+    }
+
+    // Return formatted name or fallback to display_name
+    if (parts.length > 0) {
+        return parts.slice(0, 3).join(', ');
+    }
+
+    // Fallback: take first 3 parts of display_name
+    return displayName.split(',').slice(0, 3).join(',').trim();
 }
 
 // Handle position error
@@ -204,7 +358,16 @@ function handlePositionError(error) {
 function updateLocationDisplay() {
     const { latitude, longitude, accuracy } = state.currentPosition;
 
-    elements.locationCoords.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+    // Show location name if available, otherwise show coordinates
+    if (state.currentLocationName) {
+        elements.locationCoords.innerHTML = `
+            <span class="location-name">${state.currentLocationName}</span>
+            <span class="location-coords-small">${latitude.toFixed(4)}, ${longitude.toFixed(4)}</span>
+        `;
+    } else {
+        elements.locationCoords.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+    }
+
     elements.locationAccuracy.textContent = `±${Math.round(accuracy)}m`;
     elements.locationCard.classList.remove('error');
     elements.locationCard.classList.add('success');
@@ -272,9 +435,10 @@ function setLoading(loading) {
 async function getAIResponse() {
     const { latitude, longitude } = state.currentPosition;
     const { detailLevel, interests } = state.settings;
+    const locationName = state.currentLocationName;
 
     // Build the prompt based on settings
-    let prompt = buildPrompt(latitude, longitude, detailLevel, interests);
+    let prompt = buildPrompt(latitude, longitude, detailLevel, interests, locationName);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -287,7 +451,7 @@ async function getAIResponse() {
             messages: [
                 {
                     role: 'system',
-                    content: `You are a knowledgeable and friendly local guide. You provide accurate, interesting information about locations based on GPS coordinates. Your responses should be engaging, informative, and help people appreciate their surroundings. Always structure your response with clear sections. Be factual and accurate - if you're not certain about something specific to the exact location, focus on what you know about the broader area. Never make up specific landmarks or attractions that might not exist.`
+                    content: `You're a friendly local who knows this area well. Share interesting facts and useful info in a natural, conversational way - like chatting with a friend. Keep it real: stick to facts, skip the fluff, and don't make things up. If you're not sure about something specific to this exact spot, focus on what you know about the general area. Write in short, punchy paragraphs. No corporate speak or AI-sounding phrases.`
                 },
                 {
                     role: 'user',
@@ -321,10 +485,14 @@ async function getAIResponse() {
 }
 
 // Build the prompt based on user settings
-function buildPrompt(latitude, longitude, detailLevel, interests) {
-    let basePrompt = `I am currently at coordinates: ${latitude}, ${longitude}.
+function buildPrompt(latitude, longitude, detailLevel, interests, locationName) {
+    let basePrompt = `I'm at coordinates ${latitude}, ${longitude}`;
 
-Please tell me about this location and what I might see around me.`;
+    if (locationName) {
+        basePrompt += ` (${locationName})`;
+    }
+
+    basePrompt += `.\n\nWhat's interesting about this place?`;
 
     if (interests) {
         basePrompt += `\n\nI'm particularly interested in: ${interests}`;
@@ -426,6 +594,7 @@ function addToHistory(content) {
         id: Date.now(),
         latitude: state.currentPosition.latitude,
         longitude: state.currentPosition.longitude,
+        locationName: state.currentLocationName || null,
         content: content,
         timestamp: new Date().toISOString(),
         preview: content.substring(0, 150).replace(/[#*]/g, '') + '...'
@@ -444,15 +613,18 @@ function renderHistory() {
     }
 
     elements.historySection.classList.add('visible');
-    elements.historyList.innerHTML = state.history.map(entry => `
-        <div class="history-item" data-id="${entry.id}">
-            <div class="history-item-header">
-                <span class="history-item-location">${entry.latitude.toFixed(4)}, ${entry.longitude.toFixed(4)}</span>
-                <span class="history-item-time">${formatTimeAgo(entry.timestamp)}</span>
+    elements.historyList.innerHTML = state.history.map(entry => {
+        const locationDisplay = entry.locationName || `${entry.latitude.toFixed(4)}, ${entry.longitude.toFixed(4)}`;
+        return `
+            <div class="history-item" data-id="${entry.id}">
+                <div class="history-item-header">
+                    <span class="history-item-location">${escapeHtml(locationDisplay)}</span>
+                    <span class="history-item-time">${formatTimeAgo(entry.timestamp)}</span>
+                </div>
+                <p class="history-item-preview">${escapeHtml(entry.preview)}</p>
             </div>
-            <p class="history-item-preview">${escapeHtml(entry.preview)}</p>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     // Add click handlers for history items
     elements.historyList.querySelectorAll('.history-item').forEach(item => {
