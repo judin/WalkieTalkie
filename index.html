@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Discover interesting facts about your surroundings using AI and GPS">
+    <meta name="theme-color" content="#2d5a27">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WalkieTalkie">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Satisfy&display=swap" rel="stylesheet">
+
+    <title>WalkieTalkie - Discover Your Surroundings</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">WalkieTalkie</h1>
+            <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m18.07-4.93l-4.24 4.24m-5.66 5.66l-4.24 4.24m0-14.14l4.24 4.24m5.66 5.66l4.24 4.24"></path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Location Status -->
+            <div class="location-card" id="locationCard">
+                <div class="location-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                </div>
+                <div class="location-info">
+                    <p class="location-label">Current Location</p>
+                    <p class="location-coords" id="locationCoords">Waiting for location...</p>
+                </div>
+                <div class="location-accuracy" id="locationAccuracy"></div>
+            </div>
+
+            <!-- Discover Button -->
+            <button class="discover-btn" id="discoverBtn" disabled>
+                <span class="discover-btn-text">Discover This Area</span>
+                <div class="discover-btn-loader"></div>
+            </button>
+
+            <!-- AI Response Area -->
+            <div class="response-area" id="responseArea">
+                <div class="response-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 16v-4m0-4h.01"></path>
+                    </svg>
+                    <p>Tap "Discover This Area" to learn about your surroundings</p>
+                </div>
+                <div class="response-content" id="responseContent"></div>
+            </div>
+
+            <!-- History Section -->
+            <div class="history-section" id="historySection">
+                <h2 class="history-title">Recent Discoveries</h2>
+                <div class="history-list" id="historyList"></div>
+            </div>
+        </main>
+
+        <!-- Settings Modal -->
+        <div class="modal-overlay" id="settingsModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="modal-close" id="closeSettings" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="apiKey">OpenAI API Key</label>
+                        <div class="api-key-input">
+                            <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+                            <button class="toggle-visibility" id="toggleApiKey" aria-label="Toggle visibility">
+                                <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="form-hint">Your API key is stored locally on your device</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="detailLevel">Detail Level</label>
+                        <select id="detailLevel">
+                            <option value="brief">Brief - Quick overview</option>
+                            <option value="moderate" selected>Moderate - Balanced info</option>
+                            <option value="detailed">Detailed - In-depth exploration</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="interests">Focus Areas (optional)</label>
+                        <input type="text" id="interests" placeholder="e.g., history, nature, architecture">
+                        <p class="form-hint">Comma-separated topics you're most interested in</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="clearHistory">Clear History</button>
+                    <button class="btn-primary" id="saveSettings">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

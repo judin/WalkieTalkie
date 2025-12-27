@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a8c3f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2d5a27;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#grad)"/>
+  <!-- Location pin -->
+  <path d="M256 96c-66.3 0-120 53.7-120 120 0 89.6 120 200 120 200s120-110.4 120-200c0-66.3-53.7-120-120-120zm0 162c-23.2 0-42-18.8-42-42s18.8-42 42-42 42 18.8 42 42-18.8 42-42 42z" fill="white"/>
+  <!-- Signal waves -->
+  <path d="M340 140c17.7 17.7 28 42 28 69" stroke="white" stroke-width="16" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M370 110c26.5 26.5 42 63 42 103.5" stroke="white" stroke-width="16" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <path d="M172 140c-17.7 17.7-28 42-28 69" stroke="white" stroke-width="16" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M142 110c-26.5 26.5-42 63-42 103.5" stroke="white" stroke-width="16" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg>
