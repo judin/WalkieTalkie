@@ -425,7 +425,7 @@ function renderLandmarksList() {
     if (!elements.landmarksList) return;
 
     if (state.compass.landmarks.length === 0) {
-        elements.landmarksList.innerHTML = '<p class="no-landmarks">Discover an area to see landmarks</p>';
+        elements.landmarksList.innerHTML = '';
         return;
     }
 
