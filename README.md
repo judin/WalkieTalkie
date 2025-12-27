@@ -22,6 +22,10 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.5.6
+- Removed location accuracy display (±Xm)
+- Welcome panel animation extended to 0.5s for smoother transition
+
 ### v1.5.5
 - Animated transition from welcome panel to location/map
 - Welcome panel slides up and fades out

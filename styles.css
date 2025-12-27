@@ -293,13 +293,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.location-accuracy {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-
 .location-card.error .location-icon {
     background: #ef4444;
 }
@@ -507,7 +500,7 @@ body {
 }
 
 .welcome-panel.hiding {
-    animation: welcome-exit 0.4s ease forwards;
+    animation: welcome-exit 0.5s ease forwards;
 }
 
 .welcome-panel.hidden {

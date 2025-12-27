@@ -33,7 +33,6 @@ const state = {
 // DOM Elements
 const elements = {
     locationCoords: document.getElementById('locationCoords'),
-    locationAccuracy: document.getElementById('locationAccuracy'),
     locationCard: document.getElementById('locationCard'),
     discoverBtn: document.getElementById('discoverBtn'),
     responseArea: document.getElementById('responseArea'),
@@ -958,7 +957,6 @@ function updateLocationDisplay() {
         elements.locationCoords.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
     }
 
-    elements.locationAccuracy.textContent = `±${Math.round(accuracy)}m`;
     elements.locationCard.classList.remove('error');
     elements.locationCard.classList.add('success');
 }
@@ -966,7 +964,6 @@ function updateLocationDisplay() {
 // Update location status (for errors)
 function updateLocationStatus(message, isError = false) {
     elements.locationCoords.textContent = message;
-    elements.locationAccuracy.textContent = '';
     elements.locationCard.classList.toggle('error', isError);
     elements.locationCard.classList.remove('success');
 }
