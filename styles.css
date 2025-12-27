@@ -786,13 +786,18 @@ body {
 
 /* Compass Section */
 .compass-section {
+    display: none;
     background: var(--bg-subtle);
     border-radius: var(--radius);
     padding: 16px;
 }
 
+.compass-section.has-landmarks {
+    display: block;
+}
+
 .compass-section.not-supported {
-    display: none;
+    display: none !important;
 }
 
 .compass-header {
