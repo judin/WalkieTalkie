@@ -588,10 +588,23 @@ function getLocation(showFeedback = true) {
         return;
     }
 
-    // Add animation
+    // Add animation and track start time for minimum duration
+    const animationStart = Date.now();
+    const minAnimationDuration = 1000; // At least one full rotation
+
     if (elements.refreshLocation) {
         elements.refreshLocation.classList.add('refreshing');
     }
+
+    const stopAnimation = () => {
+        const elapsed = Date.now() - animationStart;
+        const remaining = Math.max(0, minAnimationDuration - elapsed);
+        setTimeout(() => {
+            if (elements.refreshLocation) {
+                elements.refreshLocation.classList.remove('refreshing');
+            }
+        }, remaining);
+    };
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -600,15 +613,11 @@ function getLocation(showFeedback = true) {
             state.currentLocationName = null;
             reverseGeocode(position.coords.latitude, position.coords.longitude);
             if (showFeedback) showToast('Location updated', 'success');
-            if (elements.refreshLocation) {
-                elements.refreshLocation.classList.remove('refreshing');
-            }
+            stopAnimation();
         },
         (error) => {
             handlePositionError(error);
-            if (elements.refreshLocation) {
-                elements.refreshLocation.classList.remove('refreshing');
-            }
+            stopAnimation();
         },
         {
             enableHighAccuracy: true,
