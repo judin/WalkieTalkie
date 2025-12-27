@@ -1444,6 +1444,12 @@ body {
     background: var(--accent);
 }
 
+[data-theme="dark"] .location-icon.refreshing {
+    background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #5f27cd);
+    background-size: 400% 400%;
+    animation: rainbow-pulse 1.5s ease infinite;
+}
+
 /* System preference fallback (when no theme set) */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {

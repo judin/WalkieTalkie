@@ -22,6 +22,10 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.5.4
+- Filter non-touristy locations from compass (business parks, offices, etc.)
+- Fixed rainbow animation not showing in dark mode
+
 ### v1.5.3
 - Added delete button (X) to history cards
 - Shows on hover, confirms before deleting

@@ -344,6 +344,25 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
     return (bearing + 360) % 360;
 }
 
+// Non-touristy location types to filter out from compass
+const NON_TOURISTY_TYPES = [
+    'business park', 'office', 'industrial', 'warehouse', 'factory',
+    'corporate', 'business centre', 'business center', 'trading estate',
+    'retail park', 'car park', 'parking', 'petrol station', 'gas station',
+    'storage', 'depot', 'distribution', 'logistics', 'data centre',
+    'data center', 'call centre', 'call center', 'commercial'
+];
+
+// Check if a landmark should be filtered out (non-touristy)
+function isNonTouristy(name, type) {
+    const lowerName = name.toLowerCase();
+    const lowerType = type ? type.toLowerCase() : '';
+
+    return NON_TOURISTY_TYPES.some(term =>
+        lowerName.includes(term) || lowerType.includes(term)
+    );
+}
+
 // Parse landmarks from AI response and geocode them
 async function parseLandmarksFromResponse(content) {
     state.compass.landmarks = [];
@@ -374,10 +393,18 @@ async function parseLandmarksFromResponse(content) {
     }
 
     // Geocode each landmark and calculate bearing
-    for (const match of matches.slice(0, 5)) { // Limit to 5 landmarks
+    let addedCount = 0;
+    for (const match of matches) {
+        if (addedCount >= 5) break; // Limit to 5 landmarks
+
         const landmarkName = match[1].trim();
         const landmarkType = match[2] ? match[2].trim() : null;
         const distanceInfo = match[3] || '';
+
+        // Skip non-touristy locations
+        if (isNonTouristy(landmarkName, landmarkType)) {
+            continue;
+        }
 
         try {
             const coords = await geocodeLandmark(landmarkName);
@@ -397,6 +424,7 @@ async function parseLandmarksFromResponse(content) {
                     lat: coords.lat,
                     lon: coords.lon
                 });
+                addedCount++;
             }
         } catch (error) {
             console.error(`Failed to geocode landmark: ${landmarkName}`, error);
