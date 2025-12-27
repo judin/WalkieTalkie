@@ -3,7 +3,7 @@
  * Provides offline capability and caching
  */
 
-const CACHE_NAME = 'walkietalkie-v20';
+const CACHE_NAME = 'walkietalkie-v21';
 const MAP_TILE_CACHE = 'walkietalkie-tiles-v1';
 const STATIC_ASSETS = [
     '/',

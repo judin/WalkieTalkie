@@ -919,14 +919,17 @@ function updateLocationDisplay() {
     // Show location name if available, otherwise show coordinates
     if (state.currentLocationName) {
         elements.locationCoords.innerHTML = `
-            <span class="location-name">${state.currentLocationName}</span>
+            <div class="location-name-wrapper">
+                <span class="location-name">${state.currentLocationName}</span>
+            </div>
             <span class="location-coords-small">${latitude.toFixed(4)}, ${longitude.toFixed(4)}</span>
         `;
         // Check for overflow and add animation class if needed
         requestAnimationFrame(() => {
+            const wrapper = elements.locationCoords.querySelector('.location-name-wrapper');
             const nameEl = elements.locationCoords.querySelector('.location-name');
-            if (nameEl && nameEl.scrollWidth > nameEl.parentElement.offsetWidth) {
-                nameEl.classList.add('overflow');
+            if (wrapper && nameEl && nameEl.scrollWidth > wrapper.offsetWidth) {
+                wrapper.classList.add('overflow');
             }
         });
     } else {
