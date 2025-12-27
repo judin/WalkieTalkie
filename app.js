@@ -922,6 +922,13 @@ function updateLocationDisplay() {
             <span class="location-name">${state.currentLocationName}</span>
             <span class="location-coords-small">${latitude.toFixed(4)}, ${longitude.toFixed(4)}</span>
         `;
+        // Check for overflow and add animation class if needed
+        requestAnimationFrame(() => {
+            const nameEl = elements.locationCoords.querySelector('.location-name');
+            if (nameEl && nameEl.scrollWidth > nameEl.parentElement.offsetWidth) {
+                nameEl.classList.add('overflow');
+            }
+        });
     } else {
         elements.locationCoords.textContent = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
     }

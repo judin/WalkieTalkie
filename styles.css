@@ -181,6 +181,7 @@ body {
 .location-info {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .location-label {
@@ -202,6 +203,19 @@ body {
     font-weight: 500;
     color: var(--text);
     margin-bottom: 1px;
+    white-space: nowrap;
+}
+
+.location-name.overflow {
+    display: inline-block;
+    animation: marquee 8s linear infinite;
+    animation-delay: 1s;
+}
+
+@keyframes marquee {
+    0%, 10% { transform: translateX(0); }
+    45%, 55% { transform: translateX(calc(-100% + 200px)); }
+    90%, 100% { transform: translateX(0); }
 }
 
 .location-coords-small {
