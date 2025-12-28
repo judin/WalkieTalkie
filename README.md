@@ -22,6 +22,13 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.5.8
+- Rainbow animation on Discover button while loading
+- Animated progress bar at bottom of button
+- Loading skeleton animation while waiting for AI response
+- Welcome panel only exits after location is obtained
+- Proper sequenced transitions: location → map → AI content
+
 ### v1.5.7
 - Fixed animation sequencing: welcome panel (0.5s) + pause (0.5s) before location card appears
 - Location card and map now properly wait for both animation completion and geolocation

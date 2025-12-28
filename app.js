@@ -991,11 +991,6 @@ async function handleDiscover(forceLocationRefresh = false) {
 
     setLoading(true);
 
-    // Start rainbow animation on location icon
-    if (elements.locationIcon) {
-        elements.locationIcon.classList.add('refreshing');
-    }
-
     try {
         // Get location (always refresh if forced, or if no current position)
         if (forceLocationRefresh || !state.currentPosition) {
@@ -1004,8 +999,37 @@ async function handleDiscover(forceLocationRefresh = false) {
 
         if (!state.currentPosition) {
             showToast('Could not get your location', 'error');
+            setLoading(false);
             return;
         }
+
+        // Now we have location - start the transition
+        const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
+
+        // Start welcome panel exit animation
+        if (welcomePanel && !welcomePanel.classList.contains('hidden')) {
+            welcomePanel.classList.add('hiding');
+        }
+
+        // Show location card and map with sequenced animation
+        setTimeout(() => {
+            elements.locationCard.classList.add('visible');
+
+            // Start rainbow animation on location icon while AI is loading
+            if (elements.locationIcon) {
+                elements.locationIcon.classList.add('refreshing');
+            }
+
+            setTimeout(() => {
+                elements.mapContainer.classList.add('visible');
+            }, 150);
+        }, 500); // Wait for welcome panel to exit
+
+        // Show loading skeleton while waiting for AI
+        showLoadingSkeleton();
+
+        // Wait for welcome animation before fetching AI (gives user time to see location)
+        await new Promise(resolve => setTimeout(resolve, 700));
 
         const response = await getAIResponse();
         displayResponse(response);
@@ -1018,13 +1042,49 @@ async function handleDiscover(forceLocationRefresh = false) {
     } catch (error) {
         console.error('Error getting AI response:', error);
         showToast(error.message || 'Failed to get information about this area', 'error');
+        // Restore welcome panel if error
+        const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
+        if (welcomePanel) {
+            welcomePanel.classList.remove('hiding');
+        }
+        hideLoadingSkeleton();
     } finally {
         setLoading(false);
-        // Stop rainbow animation
+        // Stop rainbow animation on location icon
         if (elements.locationIcon) {
             elements.locationIcon.classList.remove('refreshing');
         }
     }
+}
+
+// Show loading skeleton in response area
+function showLoadingSkeleton() {
+    const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
+    if (welcomePanel) {
+        // Wait for welcome panel to hide before showing skeleton
+        setTimeout(() => {
+            welcomePanel.classList.add('hidden');
+            elements.responseContent.innerHTML = `
+                <div class="loading-skeleton">
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                </div>
+            `;
+            elements.responseContent.classList.add('loading');
+        }, 500);
+    }
+}
+
+// Hide loading skeleton
+function hideLoadingSkeleton() {
+    elements.responseContent.classList.remove('loading');
+    elements.responseContent.innerHTML = '';
 }
 
 // Get location as a promise
@@ -1035,45 +1095,15 @@ function getLocationAsync() {
             return;
         }
 
-        // Start welcome panel exit animation and track timing
-        const welcomePanel = elements.responseArea.querySelector('.welcome-panel');
-        const animationStartTime = Date.now();
-        const welcomeAnimationDuration = 500; // 0.5s
-        const pauseAfterAnimation = 500; // 0.5s pause
-        const totalWaitTime = welcomeAnimationDuration + pauseAfterAnimation;
-
-        if (welcomePanel && !welcomePanel.classList.contains('hidden')) {
-            welcomePanel.classList.add('hiding');
-        }
-
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 handlePositionSuccess(position);
                 // Start geocoding in background
                 reverseGeocode(position.coords.latitude, position.coords.longitude);
-
-                // Calculate remaining wait time (animation + pause - time already elapsed)
-                const elapsed = Date.now() - animationStartTime;
-                const remainingWait = Math.max(0, totalWaitTime - elapsed);
-
-                // Animate in sequence: location card first, then map
-                setTimeout(() => {
-                    elements.locationCard.classList.add('visible');
-
-                    // Then map after location card starts
-                    setTimeout(() => {
-                        elements.mapContainer.classList.add('visible');
-                    }, 150);
-                }, remainingWait);
-
                 resolve(position);
             },
             (error) => {
                 handlePositionError(error);
-                // Remove hiding class if error
-                if (welcomePanel) {
-                    welcomePanel.classList.remove('hiding');
-                }
                 reject(error);
             },
             {
@@ -1266,6 +1296,8 @@ function displayResponse(content) {
     // Convert markdown-like formatting to HTML
     const formattedContent = formatResponse(content);
 
+    // Remove loading state and show actual content
+    elements.responseContent.classList.remove('loading');
     elements.responseContent.innerHTML = formattedContent;
     elements.responseContent.classList.add('active');
 
