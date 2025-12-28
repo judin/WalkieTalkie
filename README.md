@@ -22,6 +22,10 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.6.0
+- Location name marquee fades now sync with scroll position
+- Left fade hidden when at start, right fade hidden when at end
+
 ### v1.5.9
 - Added 0.2s pause before map appears
 - Slowed map reveal animation (0.4s → 0.6s)
