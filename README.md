@@ -22,6 +22,9 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.6.1
+- Moved compass section to bottom of screen
+
 ### v1.6.0
 - Location name marquee fades now sync with scroll position
 - Left fade hidden when at start, right fade hidden when at end
