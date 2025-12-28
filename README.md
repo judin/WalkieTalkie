@@ -22,6 +22,9 @@ A Progressive Web App that uses AI and GPS to tell you about your surroundings. 
 
 ## Changelog
 
+### v1.6.2
+- Location card holds 0.4s longer before map animates in
+
 ### v1.6.1
 - Moved compass section to bottom of screen
 

@@ -1022,7 +1022,7 @@ async function handleDiscover(forceLocationRefresh = false) {
 
             setTimeout(() => {
                 elements.mapContainer.classList.add('visible');
-            }, 350);
+            }, 750);
         }, 500); // Wait for welcome panel to exit
 
         // Show loading skeleton while waiting for AI
